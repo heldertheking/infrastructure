@@ -6,3 +6,7 @@ secrets/
 # Ignore OS-specific files
 .DS_Store
 
+# IDE files
+.idea
+.vscode
+

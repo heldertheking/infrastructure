@@ -1,39 +1,59 @@
 services:
   portainer-server:
     image: portainer/portainer-ce:latest
-    container_name: portainer-server
-    command: -H unix:///var/run/docker.sock
+    container_name: portainer-core
+    security_opt:
+      - no-new-privileges:true
     ports:
       - "9443:9443" # Main Portainer Web UI (HTTPS)
       - "8000:8000" # Edge agent communication port
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${PATH_APPDATA}/core/portainer:/data
+      - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
+    networks:
+      - core-mgmt
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`portainer-core.heldertheking.com`)"
+      - "traefik.http.routers.portainer.entrypoints=web"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      - "traefik.http.middlewares.portainer-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.portainer.middlewares=portainer-headers"
 
   glances:
     image: nicolargo/glances:latest
     container_name: glances-core
     pid: host
-    ports:
-      - "61208:61208"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/os-release:/etc/os-release:ro
+      - /etc/localtime:/etc/localtime:ro
     environment:
       - GLANCES_OPT=-w
     restart: unless-stopped
+    networks:
+      - core-mgmt
 
   secure-docker-proxy:
     image: tecnativa/docker-socket-proxy
     container_name: docker-proxy-core
-    privileged: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-      - "2375:2375"
     environment:
-      - POST=0
       - CONTAINERS=1
       - NETWORKS=1
+      - SERVICES=1
+      - TASKS=1
+      - INFO=1
+      - IMAGES=1
+      - POST=0
     restart: unless-stopped
+    networks:
+      - core-mgmt
 
-volumes:
-  portainer_data:
+networks:
+  core-mgmt:
+    name: core-mgmt-network
+    driver: bridge
