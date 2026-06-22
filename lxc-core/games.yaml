@@ -1,0 +1,68 @@
+services:
+  pelican-panel:
+    image: ghcr.io/pelican-dev/panel:latest
+    container_name: pelican-panel
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - pelican-db
+      - pelican-redis
+    environment:
+      - TZ=${TZ}
+      - APP_URL=https://pelican.heldertheking.com
+      - DB_HOST=pelican-db
+      - DB_PORT=3306
+      - DB_DATABASE=pelican
+      - DB_USERNAME=pelican
+      - DB_PASSWORD=${PELICAN_DB_PASSWORD}
+      - REDIS_HOST=pelican-redis
+      - REDIS_PORT=6379
+      - CACHE_DRIVER=redis
+      - SESSION_DRIVER=redis
+      - QUEUE_DRIVER=redis
+    volumes:
+      - ${PATH_APPDATA}/core/pelican/panel:/app/storage
+      - ${PATH_APPDATA}/core/pelican/logs:/app/storage/logs
+    networks:
+      - core-mgmt
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pelican.rule=Host(`pelican.heldertheking.com`)"
+      - "traefik.http.routers.pelican.entrypoints=web"
+      - "traefik.http.services.pelican.loadbalancer.server.port=80"
+
+  pelican-db:
+    image: mariadb:11
+    container_name: pelican-db
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=${TZ}
+      - MYSQL_ROOT_PASSWORD=${PELICAN_DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=pelican
+      - MYSQL_USER=pelican
+      - MYSQL_PASSWORD=${PELICAN_DB_PASSWORD}
+    volumes:
+      - ${PATH_APPDATA}/core/pelican/db:/var/lib/mysql
+    networks:
+      - core-mgmt
+
+  pelican-redis:
+    image: redis:7-alpine
+    container_name: pelican-redis
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${PATH_APPDATA}/core/pelican/redis:/data
+    networks:
+      - core-mgmt
+
+networks:
+  core-mgmt:
+    name: core-mgmt-network
+    external: true
