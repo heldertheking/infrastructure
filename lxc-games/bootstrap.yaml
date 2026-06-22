@@ -10,29 +10,40 @@ services:
     ports:
       - "9001:9001"
     restart: unless-stopped
+    networks:
+      - games-mgmt
 
   glances:
     image: nicolargo/glances:latest
     container_name: glances-agent-games
-    pid: host # Essential for Glances to see the true processes of the LXC
+    pid: host
     ports:
       - "61208:61208"
     environment:
-      - GLANCES_OPT=-w # Starts Glances in Web/Server mode
+      - GLANCES_OPT=-w
     restart: unless-stopped
+    networks:
+      - games-mgmt
 
   secure-docker-proxy:
     image: tecnativa/docker-socket-proxy
     container_name: docker-proxy-games
-    privileged: true # Often required for AppArmor/SELinux environments inside LXCs
+    privileged: true
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro # STRICTLY Read-Only
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
       - "2375:2375"
     environment:
-      - POST=0          # Blocks all write actions (create, delete, stop, start)
-      - CONTAINERS=1    # Allows Homepage/Traefik to list containers
-      - NETWORKS=1      # Allows discovery of networks
-      - SERVICES=1      # Allows reading stack configurations
-      - IMAGES=1        # Allows reading image statuses
+      - POST=0
+      - CONTAINERS=1
+      - NETWORKS=1
+      - SERVICES=1
+      - IMAGES=1
     restart: unless-stopped
+    networks:
+      - games-mgmt
+
+networks:
+  games-mgmt:
+    name: games-mgmt-network
+    driver: bridge
