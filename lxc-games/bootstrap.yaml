@@ -59,6 +59,7 @@ services:
       - /var/lib/docker/volumes:/var/lib/docker/volumes
       - ${PATH_APPDATA}/games/wings:/etc/pelican
       - ${PATH_STORAGE}:/srv/daemon-data
+      - /var/lib/pelican:/var/lib/pelican    # ← this line
       - /tmp/pelican:/tmp/pelican
     ports:
       - "8080:8080"   # Wings API (Pelican Panel communicates here)
