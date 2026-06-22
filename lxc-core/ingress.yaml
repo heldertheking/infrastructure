@@ -16,7 +16,7 @@ services:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.endpoint=http://172.18.0.4:2375"
+      - "--providers.docker.endpoint=http://172.18.0.3:2375"
       - "--entrypoints.web.address=:80"
     networks:
       - core-mgmt
