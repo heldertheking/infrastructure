@@ -22,8 +22,11 @@ services:
       - SESSION_DRIVER=redis
       - QUEUE_DRIVER=redis
     volumes:
-      - ${PATH_APPDATA}/core/pelican/panel:/app/storage
-      - ${PATH_APPDATA}/core/pelican/logs:/app/storage/logs
+      # Mount your custom Caddyfile
+      - /opt/compose/pelican/Caddyfile:/etc/caddy/Caddyfile
+      # Updated volume paths to match standard Pelican Docker image structure
+      - ${PATH_APPDATA}/core/pelican/panel:/var/www/html/storage
+      - ${PATH_APPDATA}/core/pelican/logs:/var/www/html/storage/logs
     networks:
       - core-mgmt
     labels:
