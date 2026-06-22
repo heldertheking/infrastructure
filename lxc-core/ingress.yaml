@@ -16,7 +16,7 @@ services:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.endpoint=http://docker-proxy-core:2375"
+      - "--providers.docker.endpoint=http://172.18.0.4:2375"
       - "--entrypoints.web.address=:80"
     networks:
       - core-mgmt
@@ -36,4 +36,5 @@ services:
 
 networks:
   core-mgmt:
+    name: core-mgmt-network
     external: true

@@ -1,6 +1,6 @@
 services:
   portainer-server:
-    image: portainer/portainer-ce:latest
+    image: portainer/portainer-ee:latest
     container_name: portainer-core
     environment:
       - TZ=${TZ}
@@ -50,6 +50,8 @@ services:
       - INFO=1
       - IMAGES=1
       - POST=0
+      - EVENTS=1
+      - VOLUMES=1
       - TZ=${TZ}
     restart: unless-stopped
     networks:

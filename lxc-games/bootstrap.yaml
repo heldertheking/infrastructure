@@ -46,6 +46,41 @@ services:
     networks:
       - games-mgmt
 
+  pelican-wings:
+    image: ghcr.io/pelican-dev/wings:latest
+    container_name: pelican-wings
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+      - ${PATH_APPDATA}/games/wings:/etc/pelican
+      - ${PATH_STORAGE}:/srv/daemon-data
+      - /tmp/pelican:/tmp/pelican
+    ports:
+      - "8080:8080"   # Wings API (Pelican Panel communicates here)
+      - "2022:2022"   # SFTP
+    networks:
+      - games-mgmt
+
+  playit:
+    image: ghcr.io/playit-cloud/playit-agent:latest
+    container_name: playit-games
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=${TZ}
+      - PLAYIT_SECRET=${PLAYIT_SECRET}
+    volumes:
+      - ${PATH_APPDATA}/games/playit:/etc/playit
+    networks:
+      - games-mgmt
+
+
 networks:
   games-mgmt:
     name: games-mgmt-network
