@@ -2,6 +2,8 @@ services:
   portainer-server:
     image: portainer/portainer-ce:latest
     container_name: portainer-core
+    environment:
+      - TZ=${TZ}
     security_opt:
       - no-new-privileges:true
     ports:
@@ -10,7 +12,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${PATH_APPDATA}/core/portainer:/data
-      - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
     networks:
       - core-mgmt
@@ -29,9 +30,9 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /etc/os-release:/etc/os-release:ro
-      - /etc/localtime:/etc/localtime:ro
     environment:
       - GLANCES_OPT=-w
+      - TZ=${TZ}
     restart: unless-stopped
     networks:
       - core-mgmt
@@ -49,6 +50,7 @@ services:
       - INFO=1
       - IMAGES=1
       - POST=0
+      - TZ=${TZ}
     restart: unless-stopped
     networks:
       - core-mgmt
