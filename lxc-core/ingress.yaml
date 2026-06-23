@@ -10,6 +10,7 @@ services:
       - "81:8080"   # Traefik Dashboard
     volumes:
       - /etc/localtime:/etc/localtime:ro
+      - ${PATH_APPDATA}/traefik:/etc/traefik
     command:
       - "--global.checknewversion=false"
       - "--global.sendanonymoususage=false"
@@ -18,6 +19,8 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.endpoint=http://docker-proxy-core:2375"
       - "--entrypoints.web.address=:80"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
     networks:
       - core-mgmt
 
