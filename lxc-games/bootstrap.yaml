@@ -40,9 +40,12 @@ services:
       - games-mgmt
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.wings.rule=Host(`node1.pelican.heldertheking.com`)"
+      - "traefik.http.routers.wings.rule=Host(`node-pelican.heldertheking.com`)"
       - "traefik.http.routers.wings.entrypoints=web"
       - "traefik.http.services.wings.loadbalancer.server.port=8080"
+      - "traefik.tcp.routers.wings-ssh.rule=HostSNI(`node-pelican.heldertheking.com`)"
+      - "traefik.tcp.routers.wings-ssh.entrypoints=ssh"
+      - "traefik.tcp.services.wings-ssh.loadbalancer.server.port=2022"
 
   playit:
     image: ghcr.io/playit-cloud/playit-agent:latest
