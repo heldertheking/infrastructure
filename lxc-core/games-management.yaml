@@ -26,7 +26,7 @@ services:
       - SESSION_DRIVER=redis
       - QUEUE_DRIVER=redis
       - ASSET_URL=https://pelican.heldertheking.com
-      - TRUSTED_PROXIES=*
+      - TRUSTED_PROXIES=0.0.0.0/0
     volumes:
       - ${PATH_APPDATA}/pelican/panel:/pelican-data
     networks:
