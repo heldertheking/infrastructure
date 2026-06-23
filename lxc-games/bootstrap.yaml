@@ -38,7 +38,6 @@ services:
       - "2022:2022"
     networks:
       - games-mgmt
-      - core-mgmt
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.wings.rule=Host(`node1.pelican.heldertheking.com`)"
@@ -63,6 +62,3 @@ networks:
   games-mgmt:
     name: games-mgmt-network
     driver: bridge
-  core-mgmt:
-    name: core-mgmt-network
-    external: true
