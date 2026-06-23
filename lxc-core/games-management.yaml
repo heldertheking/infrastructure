@@ -27,6 +27,7 @@ services:
       - QUEUE_DRIVER=redis
     volumes:
       - ${PATH_APPDATA}/pelican/panel:/pelican-data
+      - ${PATH_APPDATA}/pelican/Caddyfile:/etc/caddy/Caddyfile
     networks:
       - core-mgmt
     labels:
