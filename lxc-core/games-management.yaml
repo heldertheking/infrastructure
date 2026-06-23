@@ -14,20 +14,8 @@ services:
       - APP_ENV=production
       - APP_DEBUG=false
       - BEHIND_PROXY=true
-      - DB_CONNECTION=mysql
-      - DB_HOST=pelican-db
-      - DB_PORT=3306
-      - DB_DATABASE=pelican
-      - DB_USERNAME=pelican
-      - DB_PASSWORD=${PELICAN_DB_PASSWORD}
-      - REDIS_HOST=pelican-redis
-      - REDIS_PORT=6379
-      - CACHE_DRIVER=redis
-      - SESSION_DRIVER=redis
-      - QUEUE_DRIVER=redis
     volumes:
       - ${PATH_APPDATA}/pelican/panel:/pelican-data
-      - ${PATH_APPDATA}/pelican/Caddyfile:/etc/caddy/Caddyfile
     networks:
       - core-mgmt
     labels:
