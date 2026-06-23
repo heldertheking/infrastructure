@@ -34,6 +34,10 @@ services:
       - "traefik.http.routers.pelican.rule=Host(`pelican.heldertheking.com`)"
       - "traefik.http.routers.pelican.entrypoints=web"
       - "traefik.http.services.pelican.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.pelican-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.middlewares.pelican-ws.headers.customrequestheaders.Upgrade=websocket"
+      - "traefik.http.middlewares.pelican-ws.headers.customrequestheaders.Connection=Upgrade"
+      - "traefik.http.routers.pelican.middlewares=pelican-headers,pelican-ws"
 
   pelican-db:
     image: mariadb:11
