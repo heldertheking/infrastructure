@@ -10,7 +10,7 @@ services:
       - "81:8080"   # Traefik Dashboard
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${PATH_APPDATA}/traefik:/etc/traefik
+      - ${PATH_APPDATA}/traefik/dynamic:/etc/traefik/dynamic
     command:
       - "--global.checknewversion=false"
       - "--global.sendanonymoususage=false"
