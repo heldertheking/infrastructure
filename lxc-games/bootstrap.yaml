@@ -38,6 +38,12 @@ services:
       - "2022:2022"
     networks:
       - games-mgmt
+      - core-mgmt
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wings.rule=Host(`node1.pelican.heldertheking.com`)"
+      - "traefik.http.routers.wings.entrypoints=web" # Or websecure depending on your Traefik setup
+      - "traefik.http.services.wings.loadbalancer.server.port=8080"
 
   playit:
     image: ghcr.io/playit-cloud/playit-agent:latest
@@ -57,3 +63,6 @@ networks:
   games-mgmt:
     name: games-mgmt-network
     driver: bridge
+  core-mgmt:
+    name: core-mgmt-network
+    external: true
