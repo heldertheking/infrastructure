@@ -26,7 +26,7 @@ services:
       - SESSION_DRIVER=redis
       - QUEUE_DRIVER=redis
     volumes:
-      - ${PATH_APPDATA}/core/pelican/data:/pelican-data
+      - ${PATH_APPDATA}/pelican/panel:/pelican-data
     networks:
       - core-mgmt
     labels:
@@ -48,7 +48,7 @@ services:
       - MYSQL_USER=pelican
       - MYSQL_PASSWORD=${PELICAN_DB_PASSWORD}
     volumes:
-      - ${PATH_APPDATA}/core/pelican/db:/var/lib/mysql
+      - ${PATH_APPDATA}/pelican/db:/var/lib/mysql
     networks:
       - core-mgmt
 
@@ -61,7 +61,7 @@ services:
     environment:
       - TZ=${TZ}
     volumes:
-      - ${PATH_APPDATA}/core/pelican/redis:/data
+      - ${PATH_APPDATA}/pelican/redis:/data
     networks:
       - core-mgmt
 

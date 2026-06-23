@@ -2,22 +2,22 @@ services:
   portainer-server:
     image: portainer/portainer-ee:latest
     container_name: portainer-core
-    environment:
-      - TZ=${TZ}
+    restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+    environment:
+      - TZ=${TZ}
     ports:
-      - "9443:9443" # Main Portainer Web UI (HTTPS)
-      - "8000:8000" # Edge agent communication port
+      - "0.0.0.0:9000:9000"
+      - "8000:8000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ${PATH_APPDATA}/core/portainer:/data
-    restart: unless-stopped
+      - ${PATH_APPDATA}/portainer:/data
     networks:
       - core-mgmt
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.portainer.rule=Host(`portainer-core.heldertheking.com`)"
+      - "traefik.http.routers.portainer.rule=Host(`containers.heldertheking.com`)"
       - "traefik.http.routers.portainer.entrypoints=web"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
       - "traefik.http.middlewares.portainer-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
@@ -26,6 +26,7 @@ services:
   glances:
     image: nicolargo/glances:latest
     container_name: glances-core
+    restart: unless-stopped
     pid: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -33,27 +34,26 @@ services:
     environment:
       - GLANCES_OPT=-w
       - TZ=${TZ}
-    restart: unless-stopped
     networks:
       - core-mgmt
 
   secure-docker-proxy:
     image: tecnativa/docker-socket-proxy
     container_name: docker-proxy-core
+    restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
+      - TZ=${TZ}
       - CONTAINERS=1
       - NETWORKS=1
       - SERVICES=1
       - TASKS=1
       - INFO=1
       - IMAGES=1
-      - POST=0
       - EVENTS=1
       - VOLUMES=1
-      - TZ=${TZ}
-    restart: unless-stopped
+      - POST=0
     networks:
       - core-mgmt
 
