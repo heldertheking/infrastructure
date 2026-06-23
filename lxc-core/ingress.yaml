@@ -21,6 +21,7 @@ services:
       - "--entrypoints.web.address=:80"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--providers.file.watch=true"
+      - "--entrypoints.web.forwardedHeaders.insecure=true"
     networks:
       - core-mgmt
 
