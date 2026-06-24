@@ -8,7 +8,7 @@ services:
       - ${PATH_APPDATA}/homepage:/app/config
       - ${PATH_LOGS}/homepage:/app/config/logs
     environment:
-      HOMEPAGE_ALLOWED_HOSTS: homepage.heldertheking.com
+      HOMEPAGE_ALLOWED_HOSTS: dashboard.heldertheking.com
       PUID: ${PUID}
       PGID: ${PGID}
     labels:
@@ -69,7 +69,7 @@ services:
     container_name: beszel
     restart: unless-stopped
     environment:
-      APP_URL: monitoring.heldertheking.com
+      APP_URL: https://monitoring.heldertheking.com
     volumes:
       - ${PATH_APPDATA}/beszel:/beszel_data
       - ${BESZEL_SOCKET}:/beszel_socket
