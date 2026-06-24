@@ -93,8 +93,8 @@ services:
     environment:
       LISTEN: /beszel_socket/beszel.sock
       HUB_URL: http://beszel:8090
-      TOKEN: <token>
-      KEY: "<key>"
+      TOKEN: ${BESZEL_TOKEN}
+      KEY: ${BESZEL_KEY}
 
 networks:
   core-mgmt:
