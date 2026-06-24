@@ -97,3 +97,8 @@ services:
       HUB_URL: http://beszel:8090
       TOKEN: <token>
       KEY: "<key>"
+
+networks:
+  core-mgmt:
+    name: core-mgmt-network
+    external: true
