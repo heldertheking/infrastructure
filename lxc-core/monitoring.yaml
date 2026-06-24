@@ -71,7 +71,7 @@ services:
     environment:
       APP_URL: https://monitoring.heldertheking.com
     volumes:
-      - ${PATH_APPDATA}/beszel:/beszel_data
+      - ${PATH_APPDATA}/beszel/hub:/beszel_data
       - ${BESZEL_SOCKET}:/beszel_socket
     networks:
       - core-mgmt
@@ -87,7 +87,7 @@ services:
     restart: unless-stopped
     network_mode: host
     volumes:
-      - ${PATH_APPDATA}/beszel_agent:/var/lib/beszel-agent
+      - ${PATH_APPDATA}/beszel/agent:/var/lib/beszel-agent
       - ${BESZEL_SOCKET}:/beszel_socket
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
