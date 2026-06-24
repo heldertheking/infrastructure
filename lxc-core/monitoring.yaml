@@ -4,6 +4,7 @@ services:
     container_name: homepage
     restart: unless-stopped
     volumes:
+      - ${PATH_ROOT}:/mnt/root:ro
       - ${PATH_STORAGE}:/mnt/storage-hdd:ro # Allows homepage to detect drive
       - ${PATH_APPDATA}/homepage:/app/config
       - ${PATH_LOGS}/homepage:/app/config/logs
