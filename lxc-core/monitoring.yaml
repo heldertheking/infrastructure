@@ -11,8 +11,6 @@ services:
       HOMEPAGE_ALLOWED_HOSTS: homepage.heldertheking.com
       PUID: ${PUID}
       PGID: ${PGID}
-    depends_on:
-      - socket-proxy # Makes sure proxy is loaded before homepage starts
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.homepage.rule=Host(`dashboard.heldertheking.com`)"
