@@ -11,3 +11,6 @@ secrets/
 .vscode
 
 temp/
+
+.env.*
+!.env.example

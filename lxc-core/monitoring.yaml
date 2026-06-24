@@ -1,0 +1,99 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    volumes:
+      - ${PATH_STORAGE}:/mnt/storage-hdd:ro # Allows homepage to detect drive
+      - ${PATH_APPDATA}/homepage:/app/config
+      - ${PATH_LOGS}/homepage:/app/config/logs
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: homepage.heldertheking.com
+      PUID: ${PUID}
+      PGID: ${PGID}
+    depends_on:
+      - socket-proxy # Makes sure proxy is loaded before homepage starts
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homepage.rule=Host(`dashboard.heldertheking.com`)"
+      - "traefik.http.routers.homepage.entrypoints=web"
+      - "traefik.http.services.homepage.loadbalancer.server.port=3000"
+    networks:
+      - core-mgmt
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    container_name: uptime-kuma
+    restart: always
+    volumes:
+      - ${PATH_APPDATA}/uptime-kuma:/app/data
+    environment:
+      - TZ=${TZ}
+      - UMASK=0022
+    networks:
+      - core-mgmt
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.uptime-kuma.rule=Host(`uptime.heldertheking.com`)"
+      - "traefik.http.routers.uptime-kuma.entrypoints=web"
+      - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "https://hc-ping.com/07c4cdb7-f2ea-4c76-835b-9128e40bd963" ]
+      interval: 10m
+      retries: 3
+      start_period: 10s
+      timeout: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  watchtower:
+    image: nickfedor/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ=${TZ}
+      - WATCHTOWER_SCHEDULE=0 0 5 * * 6
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_ROLL_BACK_ON_FAILURE=true
+      - WATCHTOWER_NOTIFICATIONS=shoutrrr
+      - WATCHTOWER_NOTIFICATION_URL=generic://${NOTIFY_URL}
+      - WATCHTOWER_NOTIFICATIONS_LEVEL=info
+    networks:
+      - core-mgmt
+
+  beszel:
+    image: henrygd/beszel:latest
+    container_name: beszel
+    restart: unless-stopped
+    environment:
+      APP_URL: monitoring.heldertheking.com
+    volumes:
+      - ${PATH_APPDATA}/beszel:/beszel_data
+      - ${BESZEL_SOCKET}:/beszel_socket
+    networks:
+      - core-mgmt
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.beszel.rule=Host(`monitoring.heldertheking.com`)"
+      - "traefik.http.routers.beszel.entrypoints=web"
+      - "traefik.http.services.beszel.loadbalancer.server.port=8090"
+
+  beszel-agent:
+    image: henrygd/beszel-agent:latest
+    container_name: beszel-agent
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ${PATH_APPDATA}/beszel_agent:/var/lib/beszel-agent
+      - ${BESZEL_SOCKET}:/beszel_socket
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      LISTEN: /beszel_socket/beszel.sock
+      HUB_URL: http://beszel:8090
+      TOKEN: <token>
+      KEY: "<key>"
