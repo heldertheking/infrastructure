@@ -75,7 +75,7 @@ services:
 
   glances:
     image: nicolargo/glances:latest
-    container_name: glances-core
+    container_name: glances-games
     restart: unless-stopped
     pid: host
     volumes:
