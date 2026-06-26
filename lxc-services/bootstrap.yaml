@@ -36,7 +36,8 @@ services:
     image: nicolargo/glances:latest
     container_name: glances-services
     restart: unless-stopped
-    network_mode: host
+    ports:
+      - "61208:61208"
     pid: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -44,6 +45,8 @@ services:
     environment:
       - GLANCES_OPT=-w
       - TZ=${TZ}
+    networks:
+      - services-mgmt
 
 networks:
   services-mgmt:
