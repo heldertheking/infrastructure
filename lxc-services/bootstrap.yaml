@@ -44,8 +44,6 @@ services:
     environment:
       - GLANCES_OPT=-w
       - TZ=${TZ}
-    networks:
-      - services-mgmt
 
 networks:
   services-mgmt:
