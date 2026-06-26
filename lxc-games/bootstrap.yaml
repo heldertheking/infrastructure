@@ -73,6 +73,20 @@ services:
       TOKEN: ${BESZEL_TOKEN}
       KEY: ${BESZEL_KEY}
 
+  glances:
+    image: nicolargo/glances:latest
+    container_name: glances-core
+    restart: unless-stopped
+    pid: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/os-release:/etc/os-release:ro
+    environment:
+      - GLANCES_OPT=-w
+      - TZ=${TZ}
+    networks:
+      - games-mgmt
+
 networks:
   games-mgmt:
     name: games-mgmt-network
