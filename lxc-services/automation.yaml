@@ -1,0 +1,58 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: always
+    environment:
+      - N8N_HOST=automation.heldertheking.com
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://automation.heldertheking.com/
+      - DOCKER_HOST=tcp://docker-proxy-services:2375
+      - N8N_LOG_LEVEL=info
+      - N8N_LOG_OUTPUT=file,outputs
+      - N8N_LOG_FILE_LOCATION=/home/node/logs/n8n.log
+      - N8N_TRUST_PROXY=true
+      - N8N_PROXY_HOPS=1
+    volumes:
+      - ${PATH_APPDATA}/n8n:/home/node/.n8n
+      - ${PATH_LOGS}/n8n:/home/node/logs
+    networks:
+      - services-mgmt
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.n8n.rule=Host(`automation.heldertheking.com`)"
+      - "traefik.http.routers.n8n.entrypoints=web"
+      - "traefik.http.services.n8n.loadbalancer.server.port=5678"
+      - "homepage.group=Automation"
+      - "homepage.name=n8n"
+      - "homepage.icon=n8n.svg"
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: always
+    entrypoint: /bin/sh -c "ollama serve >> /root/logs/ollama.log 2>&1"
+    volumes:
+      - ${PATH_SERVICES_DATA}/automation/ollama:/root/.ollama
+      - ${PATH_LOGS}/ollama:/root/logs
+    networks:
+      - auto-net
+      - mon-net
+      - ntfy-net
+    deploy:
+      resources:
+        limits:
+          memory: 3500M
+    labels:
+      - "homepage.group=Automation"
+      - "homepage.name=Ollama"
+      - "homepage.icon=ollama.svg"
+
+networks:
+  services-mgmt:
+    name: services-mgmt-network
+    external: true

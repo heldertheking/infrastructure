@@ -1,6 +1,6 @@
 services:
   portainer-server:
-    image: portainer/portainer-ee:latest
+    image: portainer/portainer-ee:2.39.4
     container_name: portainer-core
     restart: unless-stopped
     security_opt:
