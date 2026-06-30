@@ -1,7 +1,7 @@
 http:
   routers:
     route-wings:
-      rule: "Host(`wings.pelican.heldertheking.com`)"
+      rule: "Host(`wings-pelican.heldertheking.com`)"
       entryPoints:
         - web
       service: service-wings
