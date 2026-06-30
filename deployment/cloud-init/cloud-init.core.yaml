@@ -1,22 +1,21 @@
 #cloud-config
+hostname: core
 
-hostname: node-core
-
-# Static IP
 network:
-  version: 1
-  config:
-    - type: physical
-      name: eth0
-      subnets:
-        - type: static
-          address: 10.145.236.10/24
-          gateway: 10.145.236.1
-          dns_nameservers:
-            - 1.1.1.1
-            - 8.8.8.8
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: false
+      addresses:
+        - 10.145.236.10/24
+      routes:
+        - to: 0.0.0.0/0
+          via: 10.145.236.1
+      nameservers:
+        addresses:
+          - 1.1.1.1
+          - 8.8.8.8
 
-# System packages
 packages:
   - ca-certificates
   - curl
@@ -24,37 +23,50 @@ packages:
   - wget
   - git
   - htop
+  - nano
 
-# Fix DNS + compose env
 write_files:
-  - path: /etc/resolv.conf
-    content: |
-      nameserver 1.1.1.1
-      nameserver 8.8.8.8
-    permissions: '0644'
-
   - path: /opt/compose/.env
     content: |
-      PATH_APPDATA=/opt/appdata
-      PATH_STORAGE=/mnt/storage-hdd
-      PATH_LOGS=/var/logs
+      NODE_NAME=core
+      PATH_APPDATA="/opt/appdata/${NODE_NAME}"
+      PATH_STORAGE="/mnt/storage/${NODE_NAME}"
+      PATH_LOGS="/var/logs/${NODE_NAME}"
       TZ=Europe/Zurich
     permissions: '0600'
 
+  - path: /opt/compose/docker-compose.yml
+    content: |
+      services:
+        portainer:
+          image: portainer/portainer-ee:2.39.4
+          container_name: portainer-core
+          restart: unless-stopped
+          security_opt:
+            - no-new-privileges:true
+          environment:
+            - TZ=${TZ}
+          volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ${PATH_APPDATA}/portainer:/data
+          network_mode: host
+    permissions: '0644'
+
 runcmd:
   - timedatectl set-timezone Europe/Zurich
-  - mkdir -p /opt/appdata /opt/compose /mnt/storage-hdd /var/logs
+  - mkdir -p /mnt/appdata /opt/compose /mnt/storage /var/logs
 
   # Install Docker
   - install -m 0755 -d /etc/apt/keyrings
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
   - chmod a+r /etc/apt/keyrings/docker.gpg
   - echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu noble stable" > /etc/apt/sources.list.d/docker.list
-  - apt update
-  - apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+  - apt-get update
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
   - systemctl enable --now docker
+  - systemctl enable --now docker.service
 
-  # Glances runs in Docker on node-core (needs docker socket access)
-  # It is managed via bootstrap.yaml
+  # Start Portainer
+  - cd /opt/compose && docker compose --env-file .env up -d
 
 final_message: "node-core ready after $UPTIME seconds"

@@ -1,0 +1,72 @@
+http:
+  routers:
+    route-portainer:
+      rule: "Host(`containers.heldertheking.com`)"
+      entryPoints:
+        - web
+      service: service-portainer
+
+    route-pelican:
+      rule: "Host(`pelican.heldertheking.com`)"
+      entryPoints:
+        - web
+      service: service-pelican
+      middlewares:
+        - middleware-pelican-headers
+        - middleware-pelican-ws
+        -
+    route-homepage:
+      rule: "Host(`dashboard.heldertheking.com`)"
+      entryPoints:
+        - web
+      service: service-homepage
+
+    route-uptime_kuma:
+      rule: "Host(`uptime.heldertheking.com`)"
+      entryPoints:
+        - web
+      service: service-uptime_kuma
+
+    route-beszel:
+      rule: "Host(`monitoring.heldertheking.com`)"
+      entryPoints:
+        - web
+      service: service-beszel
+
+  services:
+    service-portainer:
+      loadBalancer:
+        servers:
+          - url: "http://10.145.236.10:9000"
+
+    service-pelican:
+      loadBalancer:
+        servers:
+          - url: "http://10.145.236.10:80"
+
+    service-homepage:
+      loadBalancer:
+        servers:
+          - url: "http://10.145.236.10:3000"
+
+    service-uptime_kuma:
+      loadBalancer:
+        servers:
+          - url: "http://10.145.236.10:3001"
+
+    service-beszel:
+      loadBalancer:
+        servers:
+          - url: "http://10.145.236.10:8090"
+
+  middlewares:
+    middleware-pelican-headers:
+      headers:
+        customRequestHeaders:
+          X-Forwarded-Proto: https
+
+    middleware-pelican-ws:
+      headers:
+        customRequestHeaders:
+          Upgrade: websocket
+          Connection: Upgrade

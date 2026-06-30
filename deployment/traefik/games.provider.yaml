@@ -1,0 +1,13 @@
+http:
+  routers:
+    route-wings:
+      rule: "Host(`wings.pelican.heldertheking.com`)"
+      entryPoints:
+        - web
+      service: service-wings
+
+  services:
+    service-wings:
+      loadBalancer:
+        servers:
+          - url: "http://10.145.236.30:8080"

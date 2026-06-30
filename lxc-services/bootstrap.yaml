@@ -1,7 +1,21 @@
 services:
-  secure-docker-proxy:
+  glances:
+    image: nicolargo/glances:latest
+    container_name: glances
+    restart: unless-stopped
+    pid: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/os-release:/etc/os-release:ro
+    environment:
+      - GLANCES_OPT=-w
+      - TZ=${TZ}
+    networks:
+      - services-mgmt
+
+  docker-proxy:
     image: tecnativa/docker-socket-proxy
-    container_name: docker-proxy-services
+    container_name: docker-proxy
     restart: unless-stopped
     privileged: true
     volumes:
@@ -31,22 +45,6 @@ services:
       HUB_URL: https://monitoring.heldertheking.com
       TOKEN: ${BESZEL_TOKEN}
       KEY: ${BESZEL_KEY}
-
-  glances:
-    image: nicolargo/glances:latest
-    container_name: glances-services
-    restart: unless-stopped
-    ports:
-      - "61208:61208"
-    pid: host
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /etc/os-release:/etc/os-release:ro
-    environment:
-      - GLANCES_OPT=-w
-      - TZ=${TZ}
-    networks:
-      - services-mgmt
 
 networks:
   services-mgmt:

@@ -4,19 +4,14 @@ services:
     container_name: homepage
     restart: unless-stopped
     volumes:
-      - ${PATH_ROOT}:/mnt/root:ro
-      - ${PATH_STORAGE}:/mnt/storage-hdd:ro # Allows homepage to detect drive
+      - /mnt/root:/mnt/root:ro
+      - ${PATH_STORAGE}:/mnt/storage:ro # Allows homepage to detect drive
       - ${PATH_APPDATA}/homepage:/app/config
       - ${PATH_LOGS}/homepage:/app/config/logs
     environment:
       HOMEPAGE_ALLOWED_HOSTS: dashboard.heldertheking.com
       PUID: ${PUID}
       PGID: ${PGID}
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.homepage.rule=Host(`dashboard.heldertheking.com`)"
-      - "traefik.http.routers.homepage.entrypoints=web"
-      - "traefik.http.services.homepage.loadbalancer.server.port=3000"
     networks:
       - core-mgmt
 
@@ -31,11 +26,6 @@ services:
       - UMASK=0022
     networks:
       - core-mgmt
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.uptime-kuma.rule=Host(`uptime.heldertheking.com`)"
-      - "traefik.http.routers.uptime-kuma.entrypoints=web"
-      - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
     healthcheck:
       test: [ "CMD", "curl", "-f", "https://hc-ping.com/07c4cdb7-f2ea-4c76-835b-9128e40bd963" ]
       interval: 10m
@@ -76,26 +66,6 @@ services:
       - ${BESZEL_SOCKET}:/beszel_socket
     networks:
       - core-mgmt
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.beszel.rule=Host(`monitoring.heldertheking.com`)"
-      - "traefik.http.routers.beszel.entrypoints=web"
-      - "traefik.http.services.beszel.loadbalancer.server.port=8090"
-
-  beszel-agent:
-    image: henrygd/beszel-agent:latest
-    container_name: beszel-agent
-    restart: unless-stopped
-    network_mode: host
-    volumes:
-      - ${PATH_APPDATA}/beszel/agent:/var/lib/beszel-agent
-      - ${BESZEL_SOCKET}:/beszel_socket
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    environment:
-      LISTEN: 45876
-      HUB_URL: https://monitoring.heldertheking.com
-      TOKEN: ${BESZEL_TOKEN}
-      KEY: ${BESZEL_KEY}
 
 networks:
   core-mgmt:

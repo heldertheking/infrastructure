@@ -17,7 +17,7 @@ services:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.endpoint=http://docker-proxy-core:2375"
+      - "--providers.docker.endpoint=http://docker-proxy:2375"
       - "--entrypoints.web.address=:80"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--providers.file.watch=true"
@@ -28,7 +28,7 @@ services:
   cloudflare:
     image: cloudflare/cloudflared:latest
     pull_policy: always
-    container_name: cloudflared-core
+    container_name: cloudflared
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true

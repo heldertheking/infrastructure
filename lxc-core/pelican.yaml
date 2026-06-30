@@ -1,5 +1,5 @@
 services:
-  pelican-panel:
+  panel:
     image: ghcr.io/pelican-dev/panel:latest
     container_name: pelican-panel
     restart: unless-stopped
@@ -18,17 +18,8 @@ services:
       - ${PATH_APPDATA}/pelican/panel:/pelican-data
     networks:
       - core-mgmt
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.pelican.rule=Host(`pelican.heldertheking.com`)"
-      - "traefik.http.routers.pelican.entrypoints=web"
-      - "traefik.http.services.pelican.loadbalancer.server.port=80"
-      - "traefik.http.middlewares.pelican-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
-      - "traefik.http.middlewares.pelican-ws.headers.customrequestheaders.Upgrade=websocket"
-      - "traefik.http.middlewares.pelican-ws.headers.customrequestheaders.Connection=Upgrade"
-      - "traefik.http.routers.pelican.middlewares=pelican-headers,pelican-ws"
 
-  pelican-db:
+  database:
     image: mariadb:11
     container_name: pelican-db
     restart: unless-stopped
@@ -45,7 +36,7 @@ services:
     networks:
       - core-mgmt
 
-  pelican-redis:
+  redis:
     image: redis:7-alpine
     container_name: pelican-redis
     restart: unless-stopped

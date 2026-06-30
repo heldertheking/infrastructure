@@ -1,13 +1,24 @@
 services:
-  secure-docker-proxy:
-    image: tecnativa/docker-socket-proxy
-    container_name: docker-proxy-games
+  glances:
+    image: nicolargo/glances:latest
+    container_name: glances
     restart: unless-stopped
-    privileged: true
+    pid: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-      - "2375:2375"
+      - /etc/os-release:/etc/os-release:ro
+    environment:
+      - GLANCES_OPT=-w
+      - TZ=${TZ}
+    networks:
+      - games-mgmt
+
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy
+    container_name: docker-proxy
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - TZ=${TZ}
       - POST=0
@@ -33,20 +44,12 @@ services:
       - /etc/pelican:/etc/pelican
       - /var/lib/pelican/volumes:/var/lib/pelican/volumes
       - /tmp/pelican:/tmp/pelican
-    ports:
-      - "8080:8080"
-      - "2022:2022"
     networks:
       - games-mgmt
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.wings.rule=Host(`node-pelican.heldertheking.com`)"
-      - "traefik.http.routers.wings.entrypoints=web"
-      - "traefik.http.services.wings.loadbalancer.server.port=8080"
 
   playit:
     image: ghcr.io/playit-cloud/playit-agent:latest
-    container_name: playit-games
+    container_name: playit
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -72,22 +75,6 @@ services:
       HUB_URL: https://monitoring.heldertheking.com
       TOKEN: ${BESZEL_TOKEN}
       KEY: ${BESZEL_KEY}
-
-  glances:
-    image: nicolargo/glances:latest
-    container_name: glances-games
-    restart: unless-stopped
-    ports:
-      - "61208:61208"
-    pid: host
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /etc/os-release:/etc/os-release:ro
-    environment:
-      - GLANCES_OPT=-w
-      - TZ=${TZ}
-    networks:
-      - games-mgmt
 
 networks:
   games-mgmt:

@@ -1,0 +1,13 @@
+http:
+  routers:
+    route-n8n:
+      rule: "Host(`automation.heldertheking.com`)"
+      entryPoints:
+        - web
+      service: service-n8n
+
+  services:
+    service-n8n:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.20:5678"
