@@ -14,7 +14,7 @@ http:
       middlewares:
         - middleware-pelican-headers
         - middleware-pelican-ws
-        -
+
     route-homepage:
       rule: "Host(`dashboard.heldertheking.com`)"
       entryPoints:
@@ -39,25 +39,26 @@ http:
         servers:
           - url: "http://10.145.236.10:9000"
 
+    # Use container names unless grabbing over nodes
     service-pelican:
       loadBalancer:
         servers:
-          - url: "http://10.145.236.10:80"
+          - url: "http://pelican-panel:80"
 
     service-homepage:
       loadBalancer:
         servers:
-          - url: "http://10.145.236.10:3000"
+          - url: "http://homepage:3000"
 
     service-uptime_kuma:
       loadBalancer:
         servers:
-          - url: "http://10.145.236.10:3001"
+          - url: "http://uptime-kuma:3001"
 
     service-beszel:
       loadBalancer:
         servers:
-          - url: "http://10.145.236.10:8090"
+          - url: "http://beszel:8090"
 
   middlewares:
     middleware-pelican-headers:
