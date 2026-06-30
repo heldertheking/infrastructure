@@ -6,8 +6,8 @@ services:
     security_opt:
       - no-new-privileges:true
     depends_on:
-      - pelican-db
-      - pelican-redis
+      - database
+      - redis
     environment:
       - TZ=${TZ}
       - APP_URL=https://pelican.heldertheking.com
