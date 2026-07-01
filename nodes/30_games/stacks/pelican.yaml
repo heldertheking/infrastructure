@@ -20,7 +20,7 @@ services:
       - pelican-net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.pelican-panel.rule=Host(`pelican.heldertheking.com`)"
+      - "traefik.http.routers.pelican-panel.rule=Host(`pelican.play.heldertheking.com`)"
       - "traefik.http.routers.pelican-panel.entrypoints=web"
       - "traefik.http.services.pelican-panel.loadbalancer.server.port=80"
 
@@ -72,7 +72,7 @@ services:
       - pelican-net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.wings.rule=Host(`wings.heldertheking.com`)"
+      - "traefik.http.routers.wings.rule=Host(`wings.play.heldertheking.com`)"
       - "traefik.http.routers.wings.entrypoints=web"
       - "traefik.http.services.wings.loadbalancer.server.port=8080"
 

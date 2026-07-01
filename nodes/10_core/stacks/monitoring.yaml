@@ -15,7 +15,7 @@ services:
       - monitoring-net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.homepage.rule=Host(`dashboard.heldertheking.com`)"
+      - "traefik.http.routers.homepage.rule=Host(`dashboard.internal.heldertheking.com`)"
       - "traefik.http.routers.homepage.entrypoints=web"
       - "traefik.http.services.homepage.loadbalancer.server.port=3000"
 
@@ -43,7 +43,7 @@ services:
       - monitoring-net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.uptime-kuma.rule=Host(`uptime.heldertheking.com`)"
+      - "traefik.http.routers.uptime-kuma.rule=Host(`uptime.internal.heldertheking.com`)"
       - "traefik.http.routers.uptime-kuma.entrypoints=web"
       - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
 
@@ -76,7 +76,7 @@ services:
       - monitoring-net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.beszel.rule=Host(`monitoring.heldertheking.com`)"
+      - "traefik.http.routers.beszel.rule=Host(`monitoring.internal.heldertheking.com`)"
       - "traefik.http.routers.beszel.entrypoints=web"
       - "traefik.http.services.beszel.loadbalancer.server.port=8090"
 
