@@ -20,10 +20,3 @@ services:
     environment:
       - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
     command: tunnel --no-autoupdate run
-    networks:
-      - core-mgmt
-
-networks:
-  core-mgmt:
-    name: core-mgmt-network
-    external: true
