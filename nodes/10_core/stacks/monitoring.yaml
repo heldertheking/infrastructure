@@ -12,7 +12,7 @@ services:
       PUID: 1000
       PGID: 1000
     networks:
-      - monitoring
+      - monitoring-net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.homepage.rule=Host(`dashboard.heldertheking.com`)"
@@ -40,7 +40,7 @@ services:
         max-size: "10m"
         max-file: "3"
     networks:
-      - monitoring
+      - monitoring-net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.uptime-kuma.rule=Host(`uptime.heldertheking.com`)"
@@ -62,7 +62,7 @@ services:
       - WATCHTOWER_NOTIFICATION_URL=generic://${NOTIFY_URL}
       - WATCHTOWER_NOTIFICATIONS_LEVEL=info
     networks:
-      - monitoring
+      - monitoring-net
 
   beszel:
     image: henrygd/beszel:latest
@@ -73,7 +73,7 @@ services:
     environment:
       APP_URL: https://monitoring.heldertheking.com
     networks:
-      - monitoring
+      - monitoring-net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.beszel.rule=Host(`monitoring.heldertheking.com`)"
@@ -82,5 +82,5 @@ services:
 
 networks:
   monitoring-net:
-    name: monitoring
+    name: monitoring-net
     driver: bridge
