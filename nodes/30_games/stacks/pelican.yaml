@@ -22,7 +22,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.pelican-panel.rule=Host(`pelican.heldertheking.com`)"
       - "traefik.http.routers.pelican-panel.entrypoints=web"
-      - "traefik.http.services.pelican-panel.loadbalancer.server.port=8080"
+      - "traefik.http.services.pelican-panel.loadbalancer.server.port=80"
 
   database:
     image: mariadb:11
