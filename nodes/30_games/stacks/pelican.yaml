@@ -17,7 +17,7 @@ services:
     volumes:
       - ${PATH_APPDATA}/pelican/panel:/pelican-data
     networks:
-      - pelican
+      - pelican-net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.pelican-panel.rule=Host(`pelican.heldertheking.com`)"
@@ -39,7 +39,7 @@ services:
     volumes:
       - ${PATH_APPDATA}/pelican/db:/var/lib/mysql
     networks:
-      - pelican
+      - pelican-net
 
   redis:
     image: redis:7-alpine
@@ -52,7 +52,7 @@ services:
     volumes:
       - ${PATH_APPDATA}/pelican/redis:/data
     networks:
-      - pelican
+      - pelican-net
 
   wings:
     image: ghcr.io/pelican-dev/wings:latest
@@ -71,7 +71,7 @@ services:
       - ${PATH_STORAGE}/wings:/var/lib/pelican/volumes
       - /tmp/pelican:/tmp/pelican
     networks:
-      - pelican
+      - pelican-net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.wings.rule=Host(`wings.heldertheking.com`)"
@@ -79,6 +79,6 @@ services:
       - "traefik.http.services.wings.loadbalancer.server.port=8080"
 
 networks:
-  pelican-network:
-    name: pelican
+  pelican-net:
+    name: pelican-net
     driver: bridge
