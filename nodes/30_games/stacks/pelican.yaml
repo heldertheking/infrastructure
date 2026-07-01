@@ -58,8 +58,6 @@ services:
     image: ghcr.io/pelican-dev/wings:latest
     container_name: wings
     restart: unless-stopped
-    ports:
-      - "8080:8080"
     security_opt:
       - no-new-privileges:true
     environment:
