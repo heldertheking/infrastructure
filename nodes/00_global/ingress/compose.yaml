@@ -1,4 +1,15 @@
 services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik-core
+    network_mode: host
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${PATH_APPDATA}/traefik:/etc/traefik # Main Configuration directory
+
   docker-proxy:
     image: tecnativa/docker-socket-proxy
     container_name: docker-proxy
@@ -23,16 +34,13 @@ services:
       # --- ADDITIONAL ---
       - TZ=${TZ}
 
-  beszel-agent:
-    image: henrygd/beszel-agent:latest
-    container_name: beszel-agent
+  cloudflare:
+    image: cloudflare/cloudflared:latest
+    pull_policy: always
+    container_name: cloudflared
     restart: unless-stopped
-    network_mode: host
-    volumes:
-      - ${PATH_APPDATA}/beszel_agent:/var/lib/beszel-agent
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+    security_opt:
+      - no-new-privileges:true
     environment:
-      LISTEN: 45876
-      HUB_URL: https://monitoring.heldertheking.com
-      TOKEN: ${BESZEL_TOKEN}
-      KEY: ${BESZEL_KEY}
+      - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
+    command: tunnel --no-autoupdate run

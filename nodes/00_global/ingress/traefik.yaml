@@ -17,16 +17,8 @@ entryPoints:
 # Define other nodes as providers
 providers:
   # Local docker instance
-  docker-core:
-    endpoint: "http://docker-proxy:2375" # 10.0.143.10:2375
-    exposedByDefault: false
-
-  docker-services:
-    endpoint: "http://10.0.143.20:2375" # Services node
-    exposedByDefault: false
-
-  docker-games:
-    endpoint: "http://10.0.143.30:2375" # Games node
+  docker:
+    endpoint: "http://docker-proxy:2375"
     exposedByDefault: false
 
   # Dynamic file provider
