@@ -1,0 +1,38 @@
+services:
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy
+    container_name: docker-proxy
+    network_mode: host # Expose socket to host
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      # --- Required for Traefik ---
+      - CONTAINERS=1
+      - EVENTS=1
+      - VERSION=1
+      - PINg=1
+      # --- STRICT SECURITY ---
+      - NETWORKS=0
+      - SERVICES=0
+      - SWARM=0
+      - TASKS=0
+      - VOLUMES=0
+      - POSTS=0
+      # --- ADDITIONAL ---
+      - TZ=${TZ}
+
+  beszel-agent:
+    image: henrygd/beszel-agent:latest
+    container_name: beszel-agent
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ${PATH_APPDATA}/beszel_agent:/var/lib/beszel-agent
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      LISTEN: 45876
+      HUB_URL: https://monitoring.heldertheking.com
+      TOKEN: ${BESZEL_TOKEN}
+      KEY: ${BESZEL_KEY}

@@ -1,0 +1,47 @@
+#cloud-config
+package_update: true
+package_upgrade: false
+
+packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - glances
+
+write_files:
+  - path: /etc/default/glances
+    owner: root:root
+    permissions: '0644'
+    content: |
+      # Run Glances in web-server mode, reachable on port 61208
+      GLANCES_OPT="-w --bind 0.0.0.0"
+
+runcmd:
+  # --- Docker CE (official repo) ---
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - >
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc]
+    https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable"
+    > /etc/apt/sources.list.d/docker.list
+  - apt-get update
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  - systemctl enable --now docker
+
+  # --- Glances native service ---
+  - systemctl enable --now glances
+
+  # --- Portainer EE (single container, this node is the manager) ---
+  # Exposed on plain HTTP (9000) — TLS is terminated externally by
+  # Traefik/cloudflared, so no need for Portainer's own HTTPS listener (9443).
+  # Port 8000 (Edge Agent tunnel) is also skipped: not needed for standard
+  # Agent environments with routable static IPs.
+  - >
+    docker run -d --name portainer --restart=always
+    -p 9000:9000
+    -v /var/run/docker.sock:/var/run/docker.sock
+    -v /mnt/appdata/portainer:/data
+    portainer/portainer-ee:latest
+
+final_message: "Manager node ready (Docker + Glances + Portainer EE) after $UPTIME seconds"

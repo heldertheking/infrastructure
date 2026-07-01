@@ -1,0 +1,29 @@
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik-core
+    network_mode: host
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${PATH_APPDATA}/traefik:/etc/traefik # Main Configuration directory
+
+  cloudflare:
+    image: cloudflare/cloudflared:latest
+    pull_policy: always
+    container_name: cloudflared
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
+    command: tunnel --no-autoupdate run
+    networks:
+      - core-mgmt
+
+networks:
+  core-mgmt:
+    name: core-mgmt-network
+    external: true
