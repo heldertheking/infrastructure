@@ -1,7 +1,7 @@
 services:
   traefik:
     image: traefik:latest
-    container_name: traefik-core
+    container_name: traefik
     network_mode: host
     restart: unless-stopped
     security_opt:
@@ -38,6 +38,7 @@ services:
     image: cloudflare/cloudflared:latest
     pull_policy: always
     container_name: cloudflared
+    network_mode: host
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true

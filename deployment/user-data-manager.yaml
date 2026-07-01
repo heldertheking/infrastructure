@@ -42,6 +42,10 @@ runcmd:
     -p 9000:9000
     -v /var/run/docker.sock:/var/run/docker.sock
     -v /mnt/appdata/portainer:/data
+    --label "traefik.enable=true"
+    --label "traefik.http.routers.portainer.rule=Host(\`containers.heldertheking.com\`)"
+    --label "traefik.http.routers.portainer.entrypoints=web"
+    --label "traefik.http.services.portainer.loadbalancer.server.port=9000"
     portainer/portainer-ee:latest
 
 final_message: "Manager node ready (Docker + Glances + Portainer EE) after $UPTIME seconds"
