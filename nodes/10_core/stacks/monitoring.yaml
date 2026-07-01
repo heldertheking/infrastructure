@@ -78,7 +78,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.beszel.rule=Host(`monitoring.heldertheking.com`)"
       - "traefik.http.routers.beszel.entrypoints=web"
-      - "traefik.http.services.beszel.loadbalancer.server.port=8080"
+      - "traefik.http.services.beszel.loadbalancer.server.port=8090"
 
 networks:
   monitoring-net:
