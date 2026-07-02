@@ -115,11 +115,15 @@ networks:
 
 ```bash
 # stacks/my-app/.env
-STACK_NAME="my-app"
-PATH_APPDATA="/mnt/appdata/${STACK_NAME}"
+# IMPORTANT: Do NOT quote values. Docker's .env parser is not bash —
+# quotes are treated as literal characters and will be included in the value.
+# Also: variable expansion (${VAR}) does NOT work inside .env files.
+# Write literal paths: PATH_APPDATA=/mnt/appdata/my-app, not /mnt/appdata/${STACK_NAME}.
+STACK_NAME=my-app
+PATH_APPDATA=/mnt/appdata/my-app
 TZ=Europe/Zurich
-DB_PASSWORD=""
-SOME_VAR=""
+DB_PASSWORD=
+SOME_VAR=
 ```
 
 ### Rules for volumes
@@ -289,5 +293,7 @@ Use this before deploying any new stack:
 - [ ] No `container_name:`, `restart:`, `depends_on:`, or `network_mode:` keys
 - [ ] `PATH_APPDATA` scoped to this stack: `/mnt/appdata/<stack-name>`
 - [ ] Router/service names in labels are unique across the whole cluster
+- [ ] `.env` values are **not quoted** — `KEY=value`, never `KEY="value"` (quotes become part of the value)
+- [ ] `.env` paths are **literal** — no `${VAR}` expansion: write `/mnt/appdata/my-app`, not `/mnt/appdata/${STACK_NAME}`
 - [ ] `.env` has real secrets filled in (never commit actual secret values)
 - [ ] `traefik-public` referenced as `external: true` (not re-created)
