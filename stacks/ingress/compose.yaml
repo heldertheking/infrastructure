@@ -5,7 +5,7 @@ services:
     restart: always
     ports:
       - "80:80"
-      - "8080:8080"
+      - "81:8080"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${PATH_APPDATA}/traefik:/etc/traefik
@@ -57,13 +57,9 @@ services:
       - public-net
 
 networks:
-  # Internal network — traefik ↔ docker-proxy only. No internet egress.
   ingress-net:
     name: ingress-net
     driver: bridge
     internal: true
-  # Shared bridge all routable services must join.
-  # Owned by this stack — other stacks reference it as external: true.
   public-net:
-    name: public-net
-    driver: bridge
+    external: true
