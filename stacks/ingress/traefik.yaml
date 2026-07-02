@@ -3,7 +3,7 @@ global:
   sendAnonymousUsage: false
 
 api:
-  insecure: true # Dashboard on :8080
+  insecure: true
 
 log:
   level: INFO
@@ -15,14 +15,11 @@ entryPoints:
       insecure: true
 
 providers:
-  # Swarm provider: reads deploy.labels from all services across the cluster.
-  # Requires SERVICES=1, SWARM=1, TASKS=1 in docker-proxy.
-  swarm:
+  docker:
     endpoint: "tcp://docker-proxy:2375"
     exposedByDefault: false
-    network: traefik-public # overlay network Traefik uses to reach backends
+    network: public-net
 
-  # Dynamic file provider for manual route overrides, TLS certs, middlewares, etc.
   file:
     directory: /etc/traefik/dynamic
     watch: true

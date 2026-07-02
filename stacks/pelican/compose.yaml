@@ -1,100 +1,84 @@
 services:
   panel:
     image: ghcr.io/pelican-dev/panel:latest
+    container_name: pelican-panel
+    restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+    volumes:
+      - ${PATH_APPDATA}/pelican/panel:/pelican-data
     environment:
       TZ: ${TZ}
-      APP_URL: https://pelican.heldertheking.com
+      APP_URL: https://pelican.${DOMAIN}
       APP_ENV: production
       APP_DEBUG: "false"
       BEHIND_PROXY: "true"
-    volumes:
-      - ${PATH_APPDATA}/pelican/panel:/pelican-data
     networks:
-      - pelican-internal
-      - traefik-public
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.labels.role == games
-      labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.pelican-panel.rule=Host(`pelican.heldertheking.com`)"
-        - "traefik.http.routers.pelican-panel.entrypoints=web"
-        - "traefik.http.services.pelican-panel.loadbalancer.server.port=80"
-        - "traefik.docker.network=traefik-public"
+      - pelican-net
+      - public-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pelican-panel.rule=Host(`pelican.${DOMAIN}`)"
+      - "traefik.http.routers.pelican-panel.entrypoints=web"
+      - "traefik.http.services.pelican-panel.loadbalancer.server.port=80"
 
   database:
     image: mariadb:11
+    container_name: pelican-db
+    restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+    volumes:
+      - ${PATH_APPDATA}/pelican/db:/var/lib/mysql
     environment:
       TZ: ${TZ}
       MYSQL_ROOT_PASSWORD: ${PELICAN_DB_ROOT_PASSWORD}
       MYSQL_DATABASE: pelican
       MYSQL_USER: pelican
       MYSQL_PASSWORD: ${PELICAN_DB_PASSWORD}
-    volumes:
-      - ${PATH_APPDATA}/pelican/db:/var/lib/mysql
     networks:
-      - pelican-internal
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.labels.role == games
+      - pelican-net
 
   redis:
     image: redis:7-alpine
+    container_name: pelican-redis
+    restart: unless-stopped
     security_opt:
       - no-new-privileges:true
-    environment:
-      TZ: ${TZ}
     volumes:
       - ${PATH_APPDATA}/pelican/redis:/data
+    environment:
+      TZ: ${TZ}
     networks:
-      - pelican-internal
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.labels.role == games
+      - pelican-net
 
   wings:
     image: ghcr.io/pelican-dev/wings:latest
+    container_name: pelican-wings
+    restart: unless-stopped
     security_opt:
       - no-new-privileges:true
-    environment:
-      TZ: ${TZ}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/volumes:/var/lib/docker/volumes
       - /etc/pelican:/etc/pelican
       - ${PATH_STORAGE}/wings:/var/lib/pelican/volumes
       - /tmp/pelican:/tmp/pelican
+    environment:
+      TZ: ${TZ}
     networks:
-      - pelican-internal
-      - traefik-public
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.labels.role == games
-      labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.wings.rule=Host(`wings.heldertheking.com`)"
-        - "traefik.http.routers.wings.entrypoints=web"
-        - "traefik.http.services.wings.loadbalancer.server.port=8080"
-        - "traefik.docker.network=traefik-public"
+      - pelican-net
+      - public-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pelican-wings.rule=Host(`wings.${DOMAIN}`)"
+      - "traefik.http.routers.pelican-wings.entrypoints=web"
+      - "traefik.http.services.pelican-wings.loadbalancer.server.port=8080"
 
 networks:
-  pelican-internal:
-    name: pelican-internal
-    driver: overlay
-    internal: true
-  traefik-public:
-    name: traefik-public
-    driver: overlay
+  pelican-net:
+    name: pelican-net
+    driver: bridge
+  public-net:
+    name: public-net
     external: true
