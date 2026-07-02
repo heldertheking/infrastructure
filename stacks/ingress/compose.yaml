@@ -50,7 +50,6 @@ services:
 
   cloudflare:
     image: cloudflare/cloudflared:latest
-    pull_policy: always
     environment:
       TUNNEL_TOKEN: ${CF_TUNNEL_TOKEN}
     command: tunnel --no-autoupdate run
