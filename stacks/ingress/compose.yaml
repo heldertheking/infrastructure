@@ -1,0 +1,76 @@
+services:
+  traefik:
+    image: traefik:latest
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: host
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${PATH_APPDATA}/traefik:/etc/traefik
+    networks:
+      - traefik-public
+      - ingress-internal
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.role == core
+
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      # Required for Traefik Swarm service discovery
+      CONTAINERS: 1
+      EVENTS: 1
+      VERSION: 1
+      PING: 1
+      SERVICES: 1
+      SWARM: 1
+      TASKS: 1
+      NETWORKS: 1
+      # Deny everything else
+      VOLUMES: 0
+      POSTS: 0
+      TZ: ${TZ}
+    networks:
+      - ingress-internal
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.role == core  # must co-locate with traefik to share the socket
+
+  cloudflare:
+    image: cloudflare/cloudflared:latest
+    pull_policy: always
+    environment:
+      TUNNEL_TOKEN: ${CF_TUNNEL_TOKEN}
+    command: tunnel --no-autoupdate run
+    networks:
+      - ingress-internal
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.role == core
+
+networks:
+  # Shared overlay all routable services must join.
+  # Owned by this stack — other stacks reference it as external: true.
+  traefik-public:
+    name: traefik-public
+    driver: overlay
+    attachable: true
+  # Internal overlay for traefik ↔ docker-proxy ↔ cloudflared only.
+  ingress-internal:
+    name: ingress-internal
+    driver: overlay
+    internal: true

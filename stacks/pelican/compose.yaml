@@ -1,0 +1,100 @@
+services:
+  panel:
+    image: ghcr.io/pelican-dev/panel:latest
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      TZ: ${TZ}
+      APP_URL: https://pelican.heldertheking.com
+      APP_ENV: production
+      APP_DEBUG: "false"
+      BEHIND_PROXY: "true"
+    volumes:
+      - ${PATH_APPDATA}/pelican/panel:/pelican-data
+    networks:
+      - pelican-internal
+      - traefik-public
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.role == games
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.pelican-panel.rule=Host(`pelican.heldertheking.com`)"
+        - "traefik.http.routers.pelican-panel.entrypoints=web"
+        - "traefik.http.services.pelican-panel.loadbalancer.server.port=80"
+        - "traefik.docker.network=traefik-public"
+
+  database:
+    image: mariadb:11
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      TZ: ${TZ}
+      MYSQL_ROOT_PASSWORD: ${PELICAN_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: pelican
+      MYSQL_USER: pelican
+      MYSQL_PASSWORD: ${PELICAN_DB_PASSWORD}
+    volumes:
+      - ${PATH_APPDATA}/pelican/db:/var/lib/mysql
+    networks:
+      - pelican-internal
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.role == games
+
+  redis:
+    image: redis:7-alpine
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      TZ: ${TZ}
+    volumes:
+      - ${PATH_APPDATA}/pelican/redis:/data
+    networks:
+      - pelican-internal
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.role == games
+
+  wings:
+    image: ghcr.io/pelican-dev/wings:latest
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      TZ: ${TZ}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+      - /etc/pelican:/etc/pelican
+      - ${PATH_STORAGE}/wings:/var/lib/pelican/volumes
+      - /tmp/pelican:/tmp/pelican
+    networks:
+      - pelican-internal
+      - traefik-public
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.role == games
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.wings.rule=Host(`wings.heldertheking.com`)"
+        - "traefik.http.routers.wings.entrypoints=web"
+        - "traefik.http.services.wings.loadbalancer.server.port=8080"
+        - "traefik.docker.network=traefik-public"
+
+networks:
+  pelican-internal:
+    name: pelican-internal
+    driver: overlay
+    internal: true
+  traefik-public:
+    name: traefik-public
+    driver: overlay
+    external: true

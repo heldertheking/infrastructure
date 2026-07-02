@@ -1,0 +1,97 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    volumes:
+      - ${PATH_STORAGE}:/mnt/storage:ro
+      - ${PATH_APPDATA}/homepage:/app/config
+      - ${PATH_LOGS}/homepage:/app/config/logs
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: dashboard.heldertheking.com
+      PUID: 1000
+      PGID: 1000
+    networks:
+      - traefik-public
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.role == core
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.homepage.rule=Host(`homepage.heldertheking.com`)"
+        - "traefik.http.routers.homepage.entrypoints=web"
+        - "traefik.http.services.homepage.loadbalancer.server.port=3000"
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    volumes:
+      - ${PATH_APPDATA}/uptime-kuma:/app/data
+    environment:
+      TZ: ${TZ}
+      UMASK: "0022"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://hc-ping.com/07c4cdb7-f2ea-4c76-835b-9128e40bd963"]
+      interval: 10m
+      retries: 3
+      start_period: 10s
+      timeout: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - traefik-public
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.role == core
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.uptime-kuma.rule=Host(`uptime.heldertheking.com`)"
+        - "traefik.http.routers.uptime-kuma.entrypoints=web"
+        - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
+
+  watchtower:
+    image: nickfedor/watchtower:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      TZ: ${TZ}
+      WATCHTOWER_SCHEDULE: "0 0 5 * * 6"
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_ROLL_BACK_ON_FAILURE: "true"
+      WATCHTOWER_NOTIFICATIONS: shoutrrr
+      WATCHTOWER_NOTIFICATION_URL: "generic://${NOTIFY_URL}"
+      WATCHTOWER_NOTIFICATIONS_LEVEL: info
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.role == core
+
+  beszel:
+    image: henrygd/beszel:latest
+    volumes:
+      - ${PATH_APPDATA}/beszel/hub:/beszel_data
+    environment:
+      APP_URL: https://monitoring.heldertheking.com
+    networks:
+      - traefik-public
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.role == core
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.beszel.rule=Host(`monitoring.heldertheking.com`)"
+        - "traefik.http.routers.beszel.entrypoints=web"
+        - "traefik.http.services.beszel.loadbalancer.server.port=8090"
+
+networks:
+  traefik-public:
+    name: traefik-public
+    driver: overlay
+    external: true
