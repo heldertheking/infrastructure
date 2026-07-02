@@ -15,7 +15,7 @@ services:
       KEY: ${BESZEL_KEY}
 
   portainer:
-    image: portainer/portainer-ce:latest
+    image: portainer/portainer-ee:latest
     container_name: portainer
     restart: unless-stopped
     volumes:
