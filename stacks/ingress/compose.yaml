@@ -57,7 +57,7 @@ services:
       TUNNEL_TOKEN: ${CF_TUNNEL_TOKEN}
     command: tunnel --no-autoupdate run
     networks:
-      - ingress-internal
+      - traefik-public  # needs internet (not internal: true) AND needs to reach traefik
     deploy:
       replicas: 1
       placement:
