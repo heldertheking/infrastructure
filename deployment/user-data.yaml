@@ -15,6 +15,12 @@ write_files:
     content: |
       # Run Glances in web-server mode, reachable on port 61208
       GLANCES_OPT="-w --bind 0.0.0.0"
+  - path: /etc/apt/apt.conf.d/99force-ipv4
+    owner: root:root
+    permissions: '0644'
+    content: |
+      # Avoid slow AAAA-lookup timeouts on networks with no real IPv6 route
+      Acquire::ForceIPv4 "true";
 
 runcmd:
   # --- Docker CE (official repo) ---
@@ -32,20 +38,4 @@ runcmd:
   # --- Glances native service ---
   - systemctl enable --now glances
 
-  # --- Portainer EE (single container, this node is the manager) ---
-  # Exposed on plain HTTP (9000) — TLS is terminated externally by
-  # Traefik/cloudflared, so no need for Portainer's own HTTPS listener (9443).
-  # Port 8000 (Edge Agent tunnel) is also skipped: not needed for standard
-  # Agent environments with routable static IPs.
-  - >
-    docker run -d --name portainer --restart=always
-    -p 9000:9000
-    -v /var/run/docker.sock:/var/run/docker.sock
-    -v /mnt/appdata/portainer:/data
-    --label "traefik.enable=true"
-    --label "traefik.http.routers.portainer.rule=Host(\`containers.heldertheking.com\`)"
-    --label "traefik.http.routers.portainer.entrypoints=web"
-    --label "traefik.http.services.portainer.loadbalancer.server.port=9000"
-    portainer/portainer-ee:latest
-
-final_message: "Manager node ready (Docker + Glances + Portainer EE) after $UPTIME seconds"
+final_message: "Node ready (Docker + Glances) after $UPTIME seconds. Portainer, Swarm join/init, and node labeling are handled by deploy.sh after boot, not here."

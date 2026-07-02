@@ -1,116 +1,180 @@
-# Incus + Docker cloud-init setup
+# Incus + Docker + Swarm cloud-init setup
 
 Files:
-- `incus-profile.yaml` — Incus profile enabling Docker-in-container (nesting).
-- `network-config-template.yaml` — static IP template (`{{IP}}` placeholder), on the `10.0.143.0/24` range, gateway `10.0.143.1`.
-- `user-data-agent.yaml` — Docker + native Glances service + Portainer **Agent** container. Use for all worker nodes.
-- `user-data-manager.yaml` — Docker + native Glances service + Portainer **EE** container. Use for exactly one node.
-- `deploy.sh` — launches an instance, substituting the IP and picking the right user-data file.
+- `incus-profile.yaml` — Incus profile enabling Docker-in-container (nesting). Unchanged from before.
+- `network-config-template.yaml` — static IP template (`{{IP}}` placeholder), on `10.0.143.0/24`, gateway `10.0.143.1`. Unchanged.
+- `user-data.yaml` — cloud-init for every node: Docker + native Glances only. **Portainer, Swarm init/join, and node labeling all moved out of cloud-init and into `deploy.sh`**, run post-boot via `incus exec`. This replaces the old separate `user-data-agent.yaml` / `user-data-manager.yaml` (now identical for every node - the Portainer/Swarm role is decided by `deploy.sh` flags, not baked into the image).
+- `deploy.sh` — launches an instance, attaches bind mounts, waits for cloud-init, then (optionally) bootstraps/joins the swarm and starts the right Portainer container.
 
-## 0. One-time host-side prerequisites (already done)
-
-Your bridge is already configured correctly:
-
-```
-ipv4.address: 10.0.143.1/24
-ipv4.dhcp: "false"
-ipv4.nat: "true"
-```
-
-This is exactly what's needed — NAT enabled, DHCP off (since you're assigning
-static IPs), gateway at `.1`. The netplan config in these files also sets an
-explicit default route and DNS on each container, which was the other
-common cause of blocked outbound traffic (static IP applied by hand with no
-gateway/DNS ever set).
-
-## 1. Create the Docker-capable profile (once)
+## 1. Create the Docker-capable profile (once, if not already done)
 
 ```bash
 incus profile create docker
 incus profile edit docker < incus-profile.yaml
 ```
 
-> If your bridge isn't named `incusbr0`, edit the `network:` value inside
-> `incus-profile.yaml` before running the above.
+## 2. Deploy nodes - order matters
 
-## 2. Launch nodes
+The node that runs `--swarm init` must exist before any `--swarm join` node,
+since joining reads the manager's IP + join token from `.swarm-state/`
+(created next to `deploy.sh` on first init).
 
 ```bash
 chmod +x deploy.sh
 
-# workers (Portainer Agent + Glances)
-./deploy.sh node1 10 agent
-./deploy.sh node2 11 agent
-./deploy.sh node3 12 agent
-
-# the one manager (Portainer EE + Glances)
-./deploy.sh node-mgr 20 manager
+./deploy.sh core     10 manager --swarm init
+./deploy.sh services 20 agent   --swarm join --general
+./deploy.sh games    30 agent   --swarm join
 ```
 
-This gives you `10.0.143.10`, `.11`, `.12`, `.20` etc., each with:
+What each flag does:
+- 3rd argument (`agent`/`manager`) is the **Portainer** role - exactly one node should be `manager` (runs Portainer EE).
+- `--swarm init` - this node creates the swarm and becomes its (sole) manager. Also deploys a cluster-wide Portainer Agent as a `global` service (see below).
+- `--swarm join` - joins the swarm `init` created.
+- `--general` - marks this node as the **unrestricted default target** for stacks (see Placement, below). Only put this on one node - `services` in this example.
 
-- `/opt/appdata/<node>` (host) → `/mnt/appdata` (container)
-- `/mnt/storage-hdd/<node>` (host) → `/mnt/storage` (container)
+You can still deploy a node without `--swarm` at all (falls back to the old standalone-Agent-container behavior), if you ever want a one-off node outside the cluster.
 
-created and attached automatically by `deploy.sh`. Because the host-side path
-depends on the instance name, these are added as per-instance disk devices
-after `incus launch`, not baked into the shared `docker` profile (a profile
-value is identical for every instance that uses it, so `<node>` can't live
-there). If `/opt` or `/mnt/storage-hdd` require root to create subdirectories
-on your host, run `deploy.sh` with `sudo` or pre-create the two node
-directories yourself before launching.
+## 3. Why Portainer Agent is no longer per-node
 
-Watch progress on any node with:
+Swarm exposes the entire cluster's state through **any single node's** Docker
+API - so Portainer doesn't need one Agent connection per host anymore. `--swarm
+init` deploys one Agent as a `mode: global` service, meaning Swarm
+automatically runs a replica on every current *and future* node. Point
+Portainer at any one node's IP on port `9001` and it sees the whole cluster.
+This also means adding a 4th node later needs no extra Portainer
+configuration - it just needs `--swarm join`.
 
+## 4. Placement: keeping `core`/`games` opt-in only
+
+**What Swarm actually guarantees:** placement constraints are fully
+enforced for the *positive* case. A stack with
+`node.labels.role==core` is 100% guaranteed to only ever land on `core` -
+this is engine-enforced, not a convention.
+
+**What Swarm does *not* have:** a "default-deny" scheduling mode. There is
+no setting that makes an *unconstrained* stack refuse to land on
+`core`/`games` automatically - Swarm's scheduler is free to place
+unconstrained work on any active node. (Node "Drain"/"Pause" availability
+looks like it might help here, but it doesn't: those states block *all* new
+task assignment unconditionally, including tasks explicitly targeted at that
+node via a constraint - so they're useless for "opt-in only" and are really
+just for maintenance mode.)
+
+So the actual mechanism is a **constraint you always include**, backed by
+labels `deploy.sh` already sets for you:
+
+- Every node gets `role=<name>` (`role=core`, `role=services`, `role=games`).
+- Every node *except* the one deployed with `--general` also gets `restricted=true`.
+
+**Default stack** (lands on `services` only, by convention):
+```yaml
+services:
+  my-app:
+    image: whatever
+    deploy:
+      placement:
+        constraints:
+          - node.labels.restricted != true
+```
+
+**Explicitly targeting `core` or `games`:**
+```yaml
+services:
+  my-core-only-app:
+    image: whatever
+    deploy:
+      placement:
+        constraints:
+          - node.labels.role == core
+```
+
+Since this relies on the constraint actually being present, the practical
+way to not have to remember it every time is to save the "default stack"
+snippet above as a **Portainer Custom Template**, so new stacks start from
+it pre-filled. Nothing stops a stack from omitting the constraint entirely
+and landing anywhere - that's a discipline/template thing, not something
+`deploy.sh` or Swarm can force.
+
+## 5. Resilience characteristics of this setup
+
+Single-manager swarm (just `core`) is a deliberate tradeoff for a 3-node
+homelab: if `core` goes down, `services`/`games` keep running whatever
+they were already running - Swarm workers cache desired state and don't
+need the manager to keep existing tasks alive. What you lose while `core`
+is down is the ability to *change* anything (deploy, scale, update) until
+it's back, since only managers can schedule. This matches the resilience
+goal from earlier (services/games staying reachable if core crashes)
+without needing a 3-manager quorum setup, which is arguably overkill here.
+
+## 6. Networking - already handled
+
+Swarm needs `2377/tcp` (control), `7946/tcp+udp` (gossip), and `4789/udp`
+(overlay data plane) open between nodes. The `ufw route allow in/out on
+incusbr0` rules from earlier already cover all traffic across the bridge,
+so no additional firewall changes are needed for Swarm specifically.
+
+## 7. Shared appdata/storage (not per-node)
+
+`core`, `services`, and `games` are all Incus containers on the **same
+physical host** - so `/opt/appdata` and `/mnt/storage-hdd` aren't distributed
+storage, they're one disk. `deploy.sh` mounts the *same* host path into
+every node's `/mnt/appdata` and `/mnt/storage` (not a per-node subfolder like
+before). This matters for Swarm specifically: a stack constrained to
+`services` today and moved to `games` tomorrow still sees its data, since
+every node's mount points at the identical host directory. No node-specific
+data bookkeeping needed.
+
+The trade-off is that this mount is deliberately broad at the Incus level
+(host → Incus container), since Incus doesn't know in advance what stacks
+will run there. The actual scoping happens one layer down, in each stack's
+own compose file - never mount the whole `/mnt/appdata` tree into an
+individual service container, only that stack's own subfolder:
+
+```yaml
+# .env for the "ingress" stack
+PATH_APPDATA=/mnt/appdata/ingress
+PATH_STORAGE=/mnt/storage/ingress
+```
+```yaml
+# docker-compose.yml
+services:
+  traefik:
+    image: traefik:latest
+    volumes:
+      - ${PATH_APPDATA}/traefik:/etc/traefik   # only this stack's own folder
+```
+
+Like the placement constraints in section 4, this is a convention backed by
+how you write compose files, not something Docker enforces on its own - a
+container running as root could still technically browse the wider tree if
+a stack's compose file carelessly mounts more than its own subfolder.
+
+Because the `docker` profile runs `security.privileged: "true"`, there's no
+Incus UID mapping/shift happening - root inside any container is root on the
+host, so file ownership stays consistent across nodes without extra
+reconciliation.
+
+**Migrating existing data**: if you already have per-node folders from the
+earlier scheme (e.g. `/opt/appdata/core`, `/opt/appdata/services`, and the
+equivalent under `/mnt/storage-hdd/<node>`), you'll want to consolidate them
+into the new stack-based layout before switching over, e.g.:
 ```bash
-incus exec node1 -- tail -f /var/log/cloud-init-output.log
+mkdir -p /opt/appdata/ingress
+mv /opt/appdata/core/traefik /opt/appdata/ingress/traefik
+
+mkdir -p /mnt/storage-hdd/media
+mv /mnt/storage-hdd/services/movies /mnt/storage-hdd/media/movies
 ```
+Do this per-app, since the old layout was organized by *node* and the new
+one is organized by *stack* - there's no automatic 1:1 mapping between them.
 
-_If it is taking really long for each line, disable `ipv6.address` using `incus network unset incusbr0 ipv6.address`._
+## 8. First login / everything else
 
-## 3. First login
-
-- **Portainer EE UI**: `http://10.0.143.20:9000` — plain HTTP, since TLS is
-  handled externally by Traefik/cloudflared. You must set the admin
-  password within ~5 minutes of first boot or the instance locks and needs
-  a container restart (`docker restart portainer`).
-- **Connect agents to EE**: in Portainer, *Environments → Add environment →
-  Agent*, and point it at each worker's IP on port `9001`. This channel
-  stays TLS internally (it's Portainer's own control connection to the
-  agent, not something Traefik/cloudflared need to see) — nothing to
-  change there.
-- **Glances web UI**: `http://<node-ip>:61208` on every node (manager included)
-  — already plain HTTP.
-
-## Behind Traefik / cloudflared
-
-Since TLS termination happens at Traefik + the cloudflared tunnel, nothing
-inside these containers needs certs or HTTPS listeners. Point Traefik's
-routers at:
-
-- `http://10.0.143.20:9000` — Portainer EE UI
-- `http://<node-ip>:61208` — Glances, per node
-
-No extra flags or config were needed to get Portainer onto plain HTTP; it
-serves both `9000` (HTTP) and `9443` (HTTPS) by default, so this setup just
-publishes/uses `9000` and skips `9443` entirely.
-
-## Notes / things you may want to tweak
-
-- Docker is installed from Docker's own apt repo (not Ubuntu's), so you get
-  current releases and `docker compose` (plugin) out of the box.
-- Glances runs as the distro's `glances.service`, started in web mode
-  (`-w --bind 0.0.0.0`) via `/etc/default/glances` — nothing containerized.
-- Portainer is a single `docker run` container in both cases, per your
-  preference — agent on workers, portainer-ee on the manager.
-- OS is `images:ubuntu/24.04/cloud` (Incus's default `images:` remote, cloud-init-enabled variant — the plain `ubuntu/24.04` alias has no cloud-init and won't work here), a minimal cloud image — no GUI,
-  small footprint, and matches your host distro so behavior stays
-  consistent. Debian 12 (`images:debian/12/cloud`) is a solid lighter-weight
-  alternative if you want to trim further; the cloud-init here works
-  unchanged on it (just swap the docker apt repo URL from `/ubuntu/` to
-  `/debian/`).
-- The `docker` profile is currently running in privileged mode. This is required so that docke can run containers.
-- If glances is running in `server/client` mode you can run the following one-liner to change the binding to `0.0.0.0` and change into `-w (web mode)`:
-  ```bash
-  incus exec <node> -- bash -c "sudo sed -i 's|^ExecStart=.*|ExecStart=/usr/bin/glances -w -B 0.0.0.0|' /lib/systemd/system/glances.service && sudo systemctl daemon-reload && sudo systemctl restart glances.service"
-  ```
+Unchanged from before:
+- **Portainer EE UI**: `http://10.0.143.10:9000` (or whichever node is `manager`) - plain HTTP, TLS handled externally by Traefik/cloudflared. Set the admin password within ~5 minutes of first boot.
+- **Glances web UI**: `http://<node-ip>:61208` on every node.
+- Docker installed from Docker's own apt repo; `docker compose` plugin included.
+- OS is `images:ubuntu/24.04/cloud`.
+- The `docker` profile runs privileged + AppArmor-unconfined - required for Docker-in-Incus to work (see `raw.lxc` in `incus-profile.yaml`).
+- If a node is taking a long time on `apt-get update`/mirrors, check `incus network unset incusbr0 ipv6.address` and the `Acquire::ForceIPv4` file in `user-data.yaml` (both already applied here).

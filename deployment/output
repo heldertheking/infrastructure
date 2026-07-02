@@ -1,0 +1,51 @@
+server@homelab:/opt/deployments$ incus list
+incus exec core -- docker node ls
+incus exec core -- docker service ls
+incus exec core -- docker service ps portainer_agent --no-trunc
+incus exec core -- docker service logs portainer_agent --tail 50
+incus exec core -- docker ps -a --filter name=portainer
++----------+---------+------------------------------+------+-----------+-----------+
+|   NAME   |  STATE  |             IPV4             | IPV6 |   TYPE    | SNAPSHOTS |
++----------+---------+------------------------------+------+-----------+-----------+
+| core     | RUNNING | 172.18.0.1 (docker_gwbridge) |      | CONTAINER | 0         |
+|          |         | 172.17.0.1 (docker0)         |      |           |           |
+|          |         | 10.0.143.10 (eth0)           |      |           |           |
++----------+---------+------------------------------+------+-----------+-----------+
+| games    | RUNNING | 10.0.143.30 (eth0)           |      | CONTAINER | 0         |
++----------+---------+------------------------------+------+-----------+-----------+
+| services | RUNNING | 10.0.143.20 (eth0)           |      | CONTAINER | 0         |
++----------+---------+------------------------------+------+-----------+-----------+
+ID                            HOSTNAME   STATUS    AVAILABILITY   MANAGER STATUS   ENGINE VERSION
+k7xjbmkogp0z6mu1p5f8h8j5k *   core       Ready     Active         Leader           29.6.1
+ID             NAME              MODE      REPLICAS   IMAGE                    PORTS
+lnwxmjgj0yrw   portainer_agent   global    0/0        portainer/agent:latest   *:9001->9001/tcp
+ID                          NAME                                            IMAGE                                                                                            NODE      DESIRED STATE   CURRENT STATE                  ERROR                       PORTS
+3hgn91r6ea99bee1nu07o6spy   portainer_agent.k7xjbmkogp0z6mu1p5f8h8j5k       portainer/agent:latest@sha256:e95f767f2caa2bcccaaa130ea73a43b16b880c6c8a841b20a58abf56a8eac63c   core      Ready           Ready less than a second ago
+2f3ehvpmhbrg63a1gmv0lnwjr    \_ portainer_agent.k7xjbmkogp0z6mu1p5f8h8j5k   portainer/agent:latest@sha256:e95f767f2caa2bcccaaa130ea73a43b16b880c6c8a841b20a58abf56a8eac63c   core      Shutdown        Failed 1 second ago            "task: non-zero exit (1)"
+d7sio5ot2qlteke0yp4bybfsq    \_ portainer_agent.k7xjbmkogp0z6mu1p5f8h8j5k   portainer/agent:latest@sha256:e95f767f2caa2bcccaaa130ea73a43b16b880c6c8a841b20a58abf56a8eac63c   core      Shutdown        Failed 9 seconds ago           "task: non-zero exit (1)"
+npfa86oyjblduqieb9l2m64k2    \_ portainer_agent.k7xjbmkogp0z6mu1p5f8h8j5k   portainer/agent:latest@sha256:e95f767f2caa2bcccaaa130ea73a43b16b880c6c8a841b20a58abf56a8eac63c   core      Shutdown        Failed 18 seconds ago          "task: non-zero exit (1)"
+lgnxl1jc9kbvy3hvatsnceh8s    \_ portainer_agent.k7xjbmkogp0z6mu1p5f8h8j5k   portainer/agent:latest@sha256:e95f767f2caa2bcccaaa130ea73a43b16b880c6c8a841b20a58abf56a8eac63c   core      Shutdown        Failed 26 seconds ago          "task: non-zero exit (1)"
+portainer_agent.0.npfa86oyjbld@core    | 2026/07/02 07:07:30.401AM INF github.com/portainer/agent/cmd/agent/main.go:89 > agent running on Docker platform |
+portainer_agent.0.d7sio5ot2qlt@core    | 2026/07/02 07:07:38.943AM INF github.com/portainer/agent/cmd/agent/main.go:89 > agent running on Docker platform |
+portainer_agent.0.lgnxl1jc9kbv@core    | 2026/07/02 07:07:21.842AM INF github.com/portainer/agent/cmd/agent/main.go:89 > agent running on Docker platform |
+portainer_agent.0.npfa86oyjbld@core    | 2026/07/02 07:07:30.407AM INF github.com/portainer/agent/cmd/agent/main.go:104 > agent running on a Swarm cluster node. Running in cluster mode |
+portainer_agent.0.lgnxl1jc9kbv@core    | 2026/07/02 07:07:21.847AM INF github.com/portainer/agent/cmd/agent/main.go:104 > agent running on a Swarm cluster node. Running in cluster mode |
+portainer_agent.0.npfa86oyjbld@core    | 2026/07/02 07:07:30.408AM WRN github.com/portainer/agent/cmd/agent/main.go:115 > unable to retrieve agent container IP address, using host flag instead | error="unable to retrieve the address on which the agent can advertise. Check your network settings" host_flag=0.0.0.0
+portainer_agent.0.lgnxl1jc9kbv@core    | 2026/07/02 07:07:21.849AM WRN github.com/portainer/agent/cmd/agent/main.go:115 > unable to retrieve agent container IP address, using host flag instead | error="unable to retrieve the address on which the agent can advertise. Check your network settings" host_flag=0.0.0.0
+portainer_agent.0.lgnxl1jc9kbv@core    | 2026/07/02 07:07:24.869AM FTL github.com/portainer/agent/cmd/agent/main.go:145 > unable to retrieve a list of IP associated to the host | error="lookup tasks.portainer_agent on 127.0.0.11:53: no such host" host=tasks.portainer_agent
+portainer_agent.0.d7sio5ot2qlt@core    | 2026/07/02 07:07:38.949AM INF github.com/portainer/agent/cmd/agent/main.go:104 > agent running on a Swarm cluster node. Running in cluster mode |
+portainer_agent.0.d7sio5ot2qlt@core    | 2026/07/02 07:07:38.95AM WRN github.com/portainer/agent/cmd/agent/main.go:115 > unable to retrieve agent container IP address, using host flag instead | error="unable to retrieve the address on which the agent can advertise. Check your network settings" host_flag=0.0.0.0
+portainer_agent.0.npfa86oyjbld@core    | 2026/07/02 07:07:33.434AM FTL github.com/portainer/agent/cmd/agent/main.go:145 > unable to retrieve a list of IP associated to the host | error="lookup tasks.portainer_agent on 127.0.0.11:53: no such host" host=tasks.portainer_agent
+portainer_agent.0.d7sio5ot2qlt@core    | 2026/07/02 07:07:41.978AM FTL github.com/portainer/agent/cmd/agent/main.go:145 > unable to retrieve a list of IP associated to the host | error="lookup tasks.portainer_agent on 127.0.0.11:53: no such host" host=tasks.portainer_agent
+portainer_agent.0.2f3ehvpmhbrg@core    | 2026/07/02 07:07:47.54AM INF github.com/portainer/agent/cmd/agent/main.go:89 > agent running on Docker platform |
+portainer_agent.0.2f3ehvpmhbrg@core    | 2026/07/02 07:07:47.547AM INF github.com/portainer/agent/cmd/agent/main.go:104 > agent running on a Swarm cluster node. Running in cluster mode |
+portainer_agent.0.2f3ehvpmhbrg@core    | 2026/07/02 07:07:47.552AM WRN github.com/portainer/agent/cmd/agent/main.go:115 > unable to retrieve agent container IP address, using host flag instead | error="unable to retrieve the address on which the agent can advertise. Check your network settings" host_flag=0.0.0.0
+portainer_agent.0.2f3ehvpmhbrg@core    | 2026/07/02 07:07:50.575AM FTL github.com/portainer/agent/cmd/agent/main.go:145 > unable to retrieve a list of IP associated to the host | error="lookup tasks.portainer_agent on 127.0.0.11:53: no such host" host=tasks.portainer_agent
+CONTAINER ID   IMAGE                    COMMAND     CREATED          STATUS                      PORTS     NAMES
+32165fb93d00   portainer/agent:latest   "./agent"   1 second ago     Created                               portainer_agent.k7xjbmkogp0z6mu1p5f8h8j5k.3hgn91r6ea99bee1nu07o6spy
+21972efff73a   portainer/agent:latest   "./agent"   10 seconds ago   Exited (1) 1 second ago               portainer_agent.k7xjbmkogp0z6mu1p5f8h8j5k.2f3ehvpmhbrg63a1gmv0lnwjr
+2f8499307156   portainer/agent:latest   "./agent"   19 seconds ago   Exited (1) 10 seconds ago             portainer_agent.k7xjbmkogp0z6mu1p5f8h8j5k.d7sio5ot2qlteke0yp4bybfsq
+6b3c9ad2d0d9   portainer/agent:latest   "./agent"   27 seconds ago   Exited (1) 18 seconds ago             portainer_agent.k7xjbmkogp0z6mu1p5f8h8j5k.npfa86oyjblduqieb9l2m64k2
+d466a73b4956   portainer/agent:latest   "./agent"   36 seconds ago   Exited (1) 27 seconds ago             portainer_agent.k7xjbmkogp0z6mu1p5f8h8j5k.lgnxl1jc9kbvy3hvatsnceh8s
+8554732e6ed2   portainer/agent:late
+
