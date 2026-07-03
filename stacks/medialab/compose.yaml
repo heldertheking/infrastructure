@@ -78,7 +78,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.seerr.rule=Host(`media.${DOMAIN}`)"
       - "traefik.http.routers.seerr.entrypoints=web"
-      - "traefik.http.services.seerr.loadbalancer.server.port=8081"
+      - "traefik.http.services.seerr.loadbalancer.server.port=5055"
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
