@@ -1,42 +1,3 @@
-## --- YAML ANCHORS ---
-#x-environment: &env
-#  TZ: ${TIMEZONE}
-#  PUID: ${PUID}
-#  PGID: ${PGID}
-#
-## 1. Define JUST the common labels
-#x-labels-external: &labels-external
-#  traefik.enable: "true"
-#  traefik.docker.network: "proxy-net"
-#  medialab: "true"
-#  dev.dozzle.group: "Medialab"
-#  homepage.group: "Media"
-#  homepage.statusStyle: "dot"
-#
-#x-labels-internal: &labels-internal
-#  media-lab: "true"
-#  dev.dozzle.group: "Medialab"
-#  homepage.group: "Management"
-#  homepage.statusStyle: "dot"
-#
-## 2. Define the service bases
-#x-external: &external
-#  restart: unless-stopped
-#  environment: *env
-#  networks:
-#    - mon-net
-#    - proxy-net
-#    - media-net
-#    - ntfy-net
-#
-#x-internal: &internal
-#  restart: unless-stopped
-#  environment: *env
-#  networks:
-#    - mon-net
-#    - media-net
-#    - ntfy-net
-
 services:
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
@@ -55,7 +16,7 @@ services:
       - public-net
     labels:
       - "traefik.enable=true"
-      - "traefil.http.routers.jellyfin.rule=Host(`watch.${DOMAIN}`)"
+      - "traefik.http.routers.jellyfin.rule=Host(`watch.${DOMAIN}`)"
       - "traefik.http.routers.jellyfin.entrypoints=web"
       - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
 
