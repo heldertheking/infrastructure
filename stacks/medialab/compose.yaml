@@ -1,0 +1,190 @@
+## --- YAML ANCHORS ---
+#x-environment: &env
+#  TZ: ${TIMEZONE}
+#  PUID: ${PUID}
+#  PGID: ${PGID}
+#
+## 1. Define JUST the common labels
+#x-labels-external: &labels-external
+#  traefik.enable: "true"
+#  traefik.docker.network: "proxy-net"
+#  medialab: "true"
+#  dev.dozzle.group: "Medialab"
+#  homepage.group: "Media"
+#  homepage.statusStyle: "dot"
+#
+#x-labels-internal: &labels-internal
+#  media-lab: "true"
+#  dev.dozzle.group: "Medialab"
+#  homepage.group: "Management"
+#  homepage.statusStyle: "dot"
+#
+## 2. Define the service bases
+#x-external: &external
+#  restart: unless-stopped
+#  environment: *env
+#  networks:
+#    - mon-net
+#    - proxy-net
+#    - media-net
+#    - ntfy-net
+#
+#x-internal: &internal
+#  restart: unless-stopped
+#  environment: *env
+#  networks:
+#    - mon-net
+#    - media-net
+#    - ntfy-net
+
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    volumes:
+      - ${PATH_APPDATA}/jellyfin:/config
+      - ${PATH_MEDIA}:/media
+      - ${PATH_LOGS}/jellyfin:/config/log
+    environment:
+      TZ: ${TIMEZONE}
+      PUIG: ${PUID}
+      PGID: ${PGID}
+    networks:
+      - media-net
+      - public-net
+    labels:
+      - "traefik.enable=true"
+      - "traefil.http.routers.jellyfin.rule=Host(`watch.${DOMAIN}`)"
+      - "traefik.http.routers.jellyfin.entrypoints=web"
+      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
+
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: seerr
+    restart: unless-stopped
+    init: true
+    volumes:
+      - ${PATH_APPDATA}/seerr:/app/config
+      - ${PATH_LOGS}/seerr:/app/logs
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${PUID}
+      PGID: ${PGID}
+    networks:
+      - media-net
+      - public-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.seerr.rule=Host(`media.${DOMAIN}`)"
+      - "traefik.http.routers.seerr.entrypoints=web"
+      - "traefik.http.services.seerr.loadbalancer.server.port=8081"
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    restart: unless-stopped
+    ports:
+      - "10000:9696"
+    volumes:
+      - ${PATH_APPDATA}/prowlarr:/config
+      - ${PATH_LOGS}/prowlarr:/config/logs
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${PUID}
+      PGID: ${PGID}
+    networks:
+      - media-net
+      - public-net
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    depends_on:
+      - prowlarr
+    ports:
+      - "10001:7878"
+    volumes:
+      - ${PATH_APPDATA}/radarr:/config
+      - ${PATH_MEDIA}:/media
+      - ${PATH_STORAGE}/downloads:/downloads
+      - ${PATH_LOGS}/radarr:/config/logs
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${PUID}
+      PGID: ${PGID}
+    networks:
+      - media-net
+      - public-net
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    depends_on:
+      - prowlarr
+    ports:
+      - "10002:8989"
+    volumes:
+      - ${PATH_APPDATA}/sonarr:/config
+      - ${PATH_MEDIA}:/media
+      - ${PATH_STORAGE}/downloads:/downloads
+      - ${PATH_LOGS}/sonarr:/config/logs
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${PUID}
+      PGID: ${PGID}
+    networks:
+      - media-net
+      - public-net
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: unless-stopped
+    depends_on:
+      - prowlarr
+      - radarr
+      - sonarr
+    ports:
+      - "10003:8080"
+    volumes:
+      - ${PATH_APPDATA}/bazarr:/config
+      - ${PATH_MEDIA}:/media
+      - ${PATH_STORAGE}/downloads:/downloads
+      - ${PATH_LOGS}/bazarr:/config/logs
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${PUID}
+      PGID: ${PGID}
+    networks:
+      - media-net
+      - public-net
+
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    restart: unless-stopped
+    ports:
+      - "10004:8080"
+    volumes:
+      - ${PATH_APPDATA}/sabnzbd:/appdata
+      - ${PATH_STORAGE}/downloads:/downloads
+      - ${PATH_APPDATA}/scripts:/scripts
+      - ${PATH_LOGS}/sabnzbd:/logs
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${PUID}
+      PGID: ${PGID}
+    networks:
+      - media-net
+      - public-net
+
+networks:
+  media-net:
+    name: media-net
+    driver: bridge
+  public-net:
+    name: public-net
+    driver: bridge
