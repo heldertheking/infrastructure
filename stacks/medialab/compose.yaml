@@ -187,4 +187,4 @@ networks:
     driver: bridge
   public-net:
     name: public-net
-    driver: bridge
+    external: true
