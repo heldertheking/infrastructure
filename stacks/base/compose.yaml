@@ -1,12 +1,18 @@
 services:
   beszel-agent:
-    image: henrygd/beszel-agent:latest
+    image: henrygd/beszel-agent:alpine
     container_name: beszel-agent
     restart: unless-stopped
     network_mode: host
     volumes:
       - ${PATH_APPDATA}/beszel-agent:/var/lib/beszel-agent
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    devices:
+      - /dev/nvme0:/dev/nvme0
+      - /dev/sda:/dev/sda
+    cap_add:
+      - SYS_ADMIN
+      - SYS_RAWIO
     environment:
       TZ: ${TZ}
       LISTEN: 45876
