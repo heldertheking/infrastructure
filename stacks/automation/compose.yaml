@@ -10,7 +10,7 @@ services:
       - N8N_HOST=automation.${DOMAIN}
       - NODE_ENV=production
       - WEBHOOK_URL=https://automation.${DOMAIN}/
-      - DOCKER_HOST=tcp://docker-proxy:2375
+      - DOCKER_HOST=tcp://docker-proxy-automation:2375
       - N8N_LOG_LEVEL=info
       - N8N_LOG_OUTPUT=file,outputs
       - N8N_LOG_FILE_LOCATION=/home/node/logs/n8n.log
@@ -45,9 +45,9 @@ services:
         limits:
           memory: 3500M
 
-  docker-proxy:
+  docker-proxy-automation:
     image: tecnativa/docker-socket-proxy
-    container_name: docker-proxy
+    container_name: docker-proxy-automation
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro # Read-only access to host socket
