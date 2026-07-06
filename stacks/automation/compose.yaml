@@ -1,0 +1,67 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    volumes:
+      - ${PATH_APPDATA}/automation/n8n:/home/node/.n8n
+      - ${PATH_LOGS}/n8n:/home/node/logs
+    environment:
+      - N8N_HOST=automation.${DOMAIN}
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://automation.${DOMAIN}/
+      - DOCKER_HOST=tcp://docker-proxy:2375
+      - N8N_LOG_LEVEL=info
+      - N8N_LOG_OUTPUT=file,outputs
+      - N8N_LOG_FILE_LOCATION=/home/node/logs/n8n.log
+      - N8N_TRUST_PROXY=true
+      - N8N_PROXY_HOPS=1
+    networks:
+      - public-net
+      - automation-net
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.n8n.rule=Host(`automation.${DOMAIN}`)"
+      - "traefik.http.routers.n8n.entrypoints=web"
+      - "traefik.http.services.n8n.loadbalancer.server.port=5678"
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    entrypoint: /bin/sh -c "ollama serve >> /root/logs/ollama.log 2>&1"
+    volumes:
+      - ${PATH_APPDATA}/ollama:/root/.ollama
+      - ${PATH_LOGS}/ollama:/root/logs
+    networks:
+      - public-net
+      - automation-net
+    deploy:
+      resources:
+        limits:
+          memory: 3500M
+
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy
+    container_name: docker-proxy
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Read-only access to host socket
+    environment:
+      - CONTAINERS=1
+      - NETWORKS=1
+      - POST=0
+    networks:
+      - automation-net
+
+networks:
+  automation-net:
+    name: automation-net
+    driver: bridge
+  public-net:
+    name: public-net
+    external: true
