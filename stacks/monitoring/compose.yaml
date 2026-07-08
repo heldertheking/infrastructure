@@ -101,7 +101,7 @@ services:
       POSTS: 0
       TZ: ${TZ}
     networks:
-      - ingress-net
+      - monitoring-net
 
 networks:
   monitoring-net:
