@@ -85,6 +85,24 @@ services:
       - "traefik.http.routers.beszel.entrypoints=web"
       - "traefik.http.services.beszel.loadbalancer.server.port=8090"
 
+  docker-proxy-monitoring:
+    image: tecnativa/docker-socket-proxy
+    container_name: docker-proxy-monitoring
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      CONTAINERS: 1
+      EVENTS: 1
+      VERSION: 1
+      PING: 1
+      NETWORKS: 1
+      POSTS: 0
+      TZ: ${TZ}
+    networks:
+      - ingress-net
+
 networks:
   monitoring-net:
     name: monitoring-net
