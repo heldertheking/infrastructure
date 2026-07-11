@@ -138,8 +138,6 @@ services:
       TZ: ${TIMEZONE}
       PUID: ${PUID}
       PGID: ${PGID}
-    command:
-      "--inet_exposure 4"
     networks:
       - media-net
       - public-net
