@@ -131,7 +131,7 @@ services:
       - "10004:8080"
     volumes:
       - ${PATH_APPDATA}/sabnzbd:/appdata
-      - ${PATH_STORAGE}/downloads:/config/Downloads/complete
+      - ${PATH_STORAGE}/downloads:/config/Downloads
       - ${PATH_APPDATA}/scripts:/scripts
       - ${PATH_LOGS}/sabnzbd:/logs
     environment:
