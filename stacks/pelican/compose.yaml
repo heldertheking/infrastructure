@@ -6,7 +6,8 @@ services:
     security_opt:
       - no-new-privileges:true
     volumes:
-      - ${PATH_APPDATA}/pelican/panel:/pelican-data
+      - ${PATH_APPDATA}/panel:/pelican-data
+      - ${PATH_APPDATA}/panel/public:/public
     environment:
       TZ: ${TZ}
       APP_URL: https://pelican.${DOMAIN}
@@ -29,7 +30,7 @@ services:
     security_opt:
       - no-new-privileges:true
     volumes:
-      - ${PATH_APPDATA}/pelican/db:/var/lib/mysql
+      - ${PATH_APPDATA}/db:/var/lib/mysql
     environment:
       TZ: ${TZ}
       MYSQL_ROOT_PASSWORD: ${PELICAN_DB_ROOT_PASSWORD}
@@ -46,7 +47,7 @@ services:
     security_opt:
       - no-new-privileges:true
     volumes:
-      - ${PATH_APPDATA}/pelican/redis:/data
+      - ${PATH_APPDATA}/redis:/data
     environment:
       TZ: ${TZ}
     networks:
