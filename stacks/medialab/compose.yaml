@@ -3,6 +3,9 @@ services:
     image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
     restart: unless-stopped
+    group_add:
+      - "44"
+      - "992"
     volumes:
       - ${PATH_APPDATA}/jellyfin:/config
       - ${PATH_MEDIA}:/media
@@ -11,6 +14,10 @@ services:
       TZ: ${TIMEZONE}
       PUID: ${PUID}
       PGID: ${PGID}
+      LIBVA_DRIVER_NAME: iHD
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+      - /dev/dri/card1:/dev/dri/card1
     networks:
       - media-net
       - public-net
