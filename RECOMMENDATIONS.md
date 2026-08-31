@@ -4,18 +4,11 @@ This document lists missing infrastructure essentials identified during the repo
 
 ---
 
-## [REC-01] Enable TLS / HTTPS on Traefik
+## [REC-01] ~~Enable TLS / HTTPS on Traefik~~ ✅ Handled by Cloudflare
 
-**Priority:** High  
-**Stack:** `ingress`
+**Status:** Not required — Cloudflare Tunnel terminates TLS at the edge. All public-facing services are served over HTTPS without any additional Traefik configuration.
 
-**Problem:** Traefik currently only defines the `web` HTTP entrypoint on port 80. All traffic — including authenticated UIs (Portainer, n8n, Pelican) — is served over plain HTTP. Even behind Cloudflare Tunnel, internal traffic is unencrypted.
-
-**Actions:**
-- Add a `websecure` entrypoint (port 443) to `traefik.yaml`.
-- Configure ACME/Let's Encrypt with the Cloudflare DNS challenge for automatic certificate provisioning.
-- Add an HTTP → HTTPS redirect middleware.
-- Update all Traefik labels in every stack to use `entrypoints=websecure` and `tls.certresolver=letsencrypt`.
+**Note:** Internal host-to-Traefik traffic (within the homelab) travels over HTTP on `public-net`. This is acceptable for a single-host setup where all containers are co-located, but if the homelab spans multiple physical hosts consider adding a local TLS certificate (e.g. via a self-signed CA or `mkcert`) to encrypt intra-host traffic too.
 
 ---
 
@@ -92,17 +85,50 @@ This document lists missing infrastructure essentials identified during the repo
 
 ---
 
-## [REC-07] Remove Direct Host Port Exposure for Media Services
+## [REC-07] Restrict Internal-Only Services — Remove Direct Host Port Exposure
 
 **Priority:** Medium  
 **Stack:** `medialab`
 
-**Problem:** Prowlarr, Radarr, Sonarr, Bazarr, and SABnzbd expose ports directly on the host (`10000–10004`). These services should only be accessible internally or through Traefik, not bound to all host interfaces.
+**Problem:** Prowlarr, Radarr, Sonarr, Bazarr, and SABnzbd bind ports `10000–10004` directly on all host interfaces. This means they are reachable by anything that can reach the host's IP — including other LAN devices and (if the host firewall is misconfigured) the internet. These services have no authentication by default and should never be publicly routable.
+
+**Context:** Unlike the public-facing services (Jellyfin, Seerr, etc.) these tools are operational back-ends. They don't need to be externally accessible — only reachable from the same host or LAN.
+
+### Recommended Approach: Route everything through Traefik + restrict via Cloudflare Access
+
+Since Cloudflare Tunnel is already in place you have two clean options:
+
+#### Option A — Traefik-only, LAN-inaccessible (most secure)
+
+1. Remove the `ports:` blocks entirely from Prowlarr, Radarr, Sonarr, Bazarr, and SABnzbd.
+2. Add Traefik labels so they get a subdomain (e.g. `radarr.<domain>`).
+3. In the Cloudflare Zero Trust dashboard, add a **Cloudflare Access policy** on those subdomains requiring authentication (e.g. One-Time Pin, GitHub SSO, or an allowed email list) before the tunnel forwards traffic.
+4. Services become reachable only via `https://radarr.<domain>` behind Cloudflare Access — zero open ports on the host.
+
+#### Option B — Traefik-only, LAN-accessible without Cloudflare (for offline/local use)
+
+1. Remove the `ports:` blocks.
+2. Add Traefik labels pointing to `internal.<domain>` subdomains.
+3. Set up a **local DNS override** (e.g. via Pi-hole, AdGuard Home, or your router's DNS) so `*.internal.example.com` resolves to the homelab IP instead of going through Cloudflare.
+4. Add a second Traefik entrypoint bound only to the LAN interface IP (e.g. `192.168.x.x:8080`) for these internal routes.
+
+#### Option C — Minimum-effort: bind ports to localhost only
+
+If routing through Traefik is not immediately feasible, at least restrict the bindings to the loopback interface so they cannot be reached from the network:
+
+```yaml
+ports:
+  - "127.0.0.1:10001:7878"  # Radarr — only accessible from the host itself
+```
+
+This prevents LAN/internet exposure while keeping the same URLs for local use (via SSH port-forwarding or when accessing from the host directly).
 
 **Actions:**
-- Remove the `ports:` blocks from Prowlarr, Radarr, Sonarr, Bazarr, and SABnzbd.
-- Add Traefik labels to each service so they are accessible via reverse proxy only.
-- If local LAN access is needed without Traefik, bind ports to `127.0.0.1` (e.g. `127.0.0.1:10001:7878`).
+- Choose Option A (preferred), B, or C above.
+- Remove or update the `ports:` blocks in `stacks/medialab/compose.yaml`.
+- Update `stacks/medialab/README.md` to reflect the new access method.
+- If using Option A: configure Cloudflare Access policies for the internal subdomains.
+- If using Option B: document the local DNS setup in the medialab README.
 
 ---
 
@@ -120,15 +146,29 @@ This document lists missing infrastructure essentials identified during the repo
 
 ---
 
-## [REC-09] Pin Container Image Versions
+## [REC-09] Pin Container Image Versions — Watchtower Interaction
 
 **Priority:** Low  
 **Stack:** All
 
-**Problem:** Almost all images use the `:latest` tag. Watchtower may pull a breaking update on a Saturday night. If a rollback is needed, there is no record of what version was previously running.
+**Problem:** Almost all images use the `:latest` tag. This can lead to unexpected breaking changes when Watchtower pulls a new image on its Saturday schedule.
+
+### How Watchtower behaves with pinned images
+
+| Pin style | Example | Watchtower behaviour |
+|-----------|---------|----------------------|
+| `:latest` | `traefik:latest` | Updates whenever a new `:latest` is pushed — least predictable |
+| Version tag | `traefik:v3.1` | Still updates if the tag is re-pushed with a new digest (maintainers do this for patch releases) |
+| Immutable digest | `traefik@sha256:abc…` | Watchtower **cannot** update it — digest is immutable; requires manual update |
+| Disabled per-container | label `com.centurylinklabs.watchtower.enable=false` | Watchtower skips this container entirely regardless of tag |
+
+**Recommendation:** Use **minor-version tags** (e.g. `traefik:v3.1`, `mariadb:11.4`) and let Watchtower handle patch updates automatically. For critical stateful services (MariaDB, Redis, Pelican) add `com.centurylinklabs.watchtower.enable=false` and update them manually after reading the changelog.
 
 **Actions:**
-- Pin each image to a specific version tag or digest after verifying stability (e.g. `traefik:v3.1`, `mariadb:11.4`).
-- Review and update pinned versions as part of a regular maintenance cycle (monthly/quarterly).
-- Document the current pinned versions in each stack's README.
-- Note: `WATCHTOWER_ROLL_BACK_ON_FAILURE: true` is already set, which mitigates — but does not eliminate — the risk.
+- Replace `:latest` with the current stable minor-version tag for each image.
+- Add `com.centurylinklabs.watchtower.enable: "false"` label to `pelican-db` (MariaDB) and `pelican-redis` (Redis) to prevent unattended major/minor version bumps.
+- Document the current pinned versions in each stack's README under a "Image Versions" section.
+- Schedule a monthly review to bump pinned versions.
+
+> `WATCHTOWER_ROLL_BACK_ON_FAILURE: true` is already configured, which automatically reverts a container if the new image fails to start — this is a good safety net but not a substitute for pinning.
+
