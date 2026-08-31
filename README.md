@@ -1,4 +1,4 @@
-# 🏠 Homelab Infrastructure
+# Homelab Infrastructure
 
 A Docker Compose-based homelab split into independent, purpose-built stacks. All stacks connect through a shared `public-net` Docker network and are exposed via a centralised Traefik reverse proxy with a Cloudflare Tunnel for external access.
 
@@ -123,9 +123,3 @@ make logs  STACK=<name>   # Follow logs
 make pull  STACK=<name>   # Pull latest images for a stack
 make pull                  # Pull latest images for ALL stacks
 ```
-
----
-
-## Incus Cheat Sheet
-
-![img.png](img.png)

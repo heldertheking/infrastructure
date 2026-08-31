@@ -42,6 +42,8 @@ Or with the root Makefile:
 make up STACK=base
 ```
 
+Alternatively, stacks can be deployed and managed via **Portainer** (itself part of this stack) using its GitOps / Stack feature — point it at this repository and select the relevant `compose.yaml`.
+
 ## Configuration Variables
 
 See [`.env.base.example`](.env.base.example) for a ready-to-copy template.
