@@ -12,10 +12,13 @@ Handles all inbound traffic routing and external connectivity.
 
 ### Interactions
 
-```
-Internet → cloudflared → public-net → traefik
-traefik  → ingress-net  → docker-proxy → /var/run/docker.sock (read-only)
-traefik  → public-net   → service containers (via Docker labels)
+```mermaid
+flowchart LR
+    Internet(["Internet"]) --> CF["cloudflared"]
+    CF -->|public-net| Traefik["traefik"]
+    Traefik -->|ingress-net| Proxy["docker-proxy"]
+    Proxy --> Socket[("/var/run/docker.sock<br/>(read-only)")]
+    Traefik -->|public-net| Services["service containers<br/>(via Docker labels)"]
 ```
 
 Traefik reads container labels from `public-net` through the socket proxy (`tcp://docker-proxy:2375`). Dynamic configuration (middlewares, TLS, etc.) can be placed in `$PATH_APPDATA/traefik/dynamic/`.

@@ -16,20 +16,22 @@ Full media acquisition and streaming stack — from indexing and downloading to 
 
 ### Service Dependency Graph
 
-```
-seerr ──────────────────────────┐
-                                 ▼
-prowlarr ──→ radarr  ──→ sabnzbd (downloads)
-         └──→ sonarr ──┘
-                  ▼
-               bazarr (subtitles for radarr + sonarr content)
-                  ▼
-              jellyfin (streams /media)
+```mermaid
+flowchart TD
+    Seerr["seerr"] --> Radarr["radarr"]
+    Seerr --> Sonarr["sonarr"]
+    Prowlarr["prowlarr"] --> Radarr
+    Prowlarr --> Sonarr
+    Radarr --> SABnzbd["sabnzbd<br/>(downloads)"]
+    Sonarr --> SABnzbd
+    Radarr --> Bazarr["bazarr<br/>(subtitles for radarr + sonarr content)"]
+    Sonarr --> Bazarr
+    Bazarr --> Jellyfin["jellyfin<br/>(streams /media)"]
 ```
 
 ### Direct-Port Access
 
-Prowlarr, Radarr, Sonarr, Bazarr, and SABnzbd are accessible directly on host ports `10000–10004` (see table above) in addition to being on `public-net`.
+Prowlarr, Radarr, Sonarr, Bazarr, and SABnzbd are accessible directly on host ports `10000–10004` (see table above) in addition to being on `public-net`. These ports fall within the `10000–10050` range reserved for internal/private services — see [README.md → Port Allocation](../../README.md#port-allocation). They have no built-in authentication and must never be exposed to the LAN or internet; access is currently restricted by convention only (host firewall / Tailscale-only binding is not yet enforced — tracked as a deferred item, see [README.md → Deferred Recommendations](../../README.md#deferred-recommendations)).
 
 ## Prerequisites
 
@@ -67,12 +69,12 @@ See [`.env.medialab.example`](.env.medialab.example) for a ready-to-copy templat
 | `PUID` | Host user ID for LinuxServer images | `1000` |
 | `PGID` | Host group ID for LinuxServer images | `1000` |
 
-## Exposed Host Ports
+## Exposed Ports
 
-| Port | Service |
-|------|---------|
-| `10000` | Prowlarr |
-| `10001` | Radarr |
-| `10002` | Sonarr |
-| `10003` | Bazarr |
-| `10004` | SABnzbd |
+| Port | Service | Purpose |
+|------|---------|---------|
+| `10000` | Prowlarr | Indexer aggregator UI |
+| `10001` | Radarr | Movie manager UI |
+| `10002` | Sonarr | TV manager UI |
+| `10003` | Bazarr | Subtitle manager UI |
+| `10004` | SABnzbd | Usenet download client UI |

@@ -6,25 +6,35 @@ A Docker Compose-based homelab split into independent, purpose-built stacks. All
 
 ## Architecture Overview
 
+```mermaid
+flowchart TD
+    Internet(["Internet"]) --> CF["Cloudflare Tunnel<br/>(cloudflared)"]
+    CF --> Traefik["Traefik<br/>(reverse proxy, HTTP :80)"]
+
+    subgraph publicnet["public-net (external Docker network)"]
+        Homepage["Homepage<br/>homepage.$DOMAIN"]
+        Uptime["Uptime Kuma<br/>uptime.$DOMAIN"]
+        BeszelHub["Beszel Hub<br/>monitoring.$DOMAIN"]
+        Portainer["Portainer<br/>containers.$DOMAIN"]
+        N8N["n8n<br/>automation.$DOMAIN"]
+        Jellyfin["Jellyfin<br/>watch.$DOMAIN"]
+        Seerr["Seerr<br/>media.$DOMAIN"]
+        Panel["Pelican Panel<br/>pelican.$DOMAIN"]
+        Wings["Pelican Wings<br/>wings.$DOMAIN"]
+    end
+
+    Traefik --> Homepage
+    Traefik --> Uptime
+    Traefik --> BeszelHub
+    Traefik --> Portainer
+    Traefik --> N8N
+    Traefik --> Jellyfin
+    Traefik --> Seerr
+    Traefik --> Panel
+    Traefik --> Wings
 ```
-Internet
-   │
-   ▼
-Cloudflare Tunnel (cloudflared)
-   │
-   ▼
-Traefik (reverse proxy, HTTP :80)
-   │ public-net (external Docker network)
-   ├── Homepage        → homepage.<domain>
-   ├── Uptime Kuma     → uptime.<domain>
-   ├── Beszel Hub      → monitoring.<domain>
-   ├── Portainer       → containers.<domain>
-   ├── n8n             → automation.<domain>
-   ├── Jellyfin        → watch.<domain>
-   ├── Seerr           → media.<domain>
-   ├── Pelican Panel   → pelican.<domain>
-   └── Pelican Wings   → wings.<domain>
-```
+
+> `$DOMAIN` refers to the `DOMAIN` variable configured per stack — see each stack's Configuration Variables table.
 
 ---
 
@@ -57,6 +67,33 @@ Traefik (reverse proxy, HTTP :80)
 > ```bash
 > docker network create public-net
 > ```
+
+---
+
+## Port Allocation
+
+| Range | Purpose | Access |
+|-------|---------|--------|
+| `80` | Traefik HTTP entrypoint | Public, via Cloudflare Tunnel |
+| `81` | Traefik dashboard | Host only — restrict further in production |
+| `10000–10050` | Reserved for internal/private services (operational back-ends with no built-in auth) | Intended to be Tailscale-only — see note below |
+
+Services in the `10000–10050` range are back-office tools (e.g. Prowlarr, Radarr, Sonarr, Bazarr, SABnzbd in the `medialab` stack — see [`stacks/medialab/README.md`](stacks/medialab/README.md)) that must never be reachable from the public internet. This range is reserved so any future private service has a predictable, non-conflicting port to bind to.
+
+> **Current state:** these ports are bound to all host interfaces today, restricted only by convention (not yet enforced). The intended end state is to expose this range only over [Tailscale](https://tailscale.com) (e.g. binding to the host's Tailscale interface IP, or gating with Tailscale ACLs/serve), so the services are reachable from the tailnet only and never from the LAN or internet. This restriction is a known gap — see [Deferred Recommendations](#deferred-recommendations) below.
+
+---
+
+## Deferred Recommendations
+
+The infrastructure audit in [RECOMMENDATIONS.md](RECOMMENDATIONS.md) identified two items that are intentionally **not** being implemented right now:
+
+| Item | Recommendation | Why deferred |
+|------|-----------------|---------------|
+| Secrets Manager | [REC-02](RECOMMENDATIONS.md#rec-02-implement-a-secrets-manager) | Secrets stay in gitignored `.env` files on disk for now. Revisit if the host becomes shared/multi-tenant or compliance requirements change. |
+| Private-service port restriction (Tailscale-only `10000–10050`) | [REC-07](RECOMMENDATIONS.md#rec-07-restrict-internal-only-services--remove-direct-host-port-exposure) | The port range is reserved and documented above, but the actual Tailscale/firewall enforcement is not yet in place. |
+
+All other recommendations are tracked as issues in the GitHub repository.
 
 ---
 

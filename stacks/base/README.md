@@ -11,12 +11,13 @@ Foundation management services — container administration and system-level met
 
 ### Interactions
 
-```
-portainer      → public-net   → exposed via Traefik (containers.<domain>)
-               → base-net     → internal network
+```mermaid
+flowchart LR
+    Portainer["portainer"] -->|public-net| Traefik["Traefik<br/>containers.$DOMAIN"]
+    Portainer -->|base-net| BaseNet[("internal network")]
 
-beszel-agent   → host network → reads /var/run/docker.sock, NVMe & SATA device stats
-               → reports to https://monitoring.<domain> (Beszel hub in monitoring stack)
+    BeszelAgent["beszel-agent"] -->|host network| Socket[("/var/run/docker.sock<br/>NVMe & SATA device stats")]
+    BeszelAgent -->|"https://monitoring.$DOMAIN"| BeszelHub["Beszel Hub<br/>(monitoring stack)"]
 ```
 
 The Beszel agent runs in `network_mode: host` and requires `SYS_ADMIN` + `SYS_RAWIO` capabilities to read SMART data from disk devices. Adjust the `devices` list in `compose.yaml` to match your hardware.

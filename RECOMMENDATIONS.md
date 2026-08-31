@@ -14,6 +14,8 @@ This document lists missing infrastructure essentials identified during the repo
 
 ## [REC-02] Implement a Secrets Manager
 
+**Status:** Deferred — not being implemented right now. See [README.md → Deferred Recommendations](README.md#deferred-recommendations). Secrets remain in gitignored `.env` files on disk; revisit if the host becomes shared/multi-tenant or compliance requirements change.
+
 **Priority:** High  
 **Stack:** All
 
@@ -28,6 +30,7 @@ This document lists missing infrastructure essentials identified during the repo
 
 ## [REC-03] Centralised Log Aggregation
 
+**Issue:** [#2](https://github.com/heldertheking/infrastructure/issues/2)
 **Priority:** Medium  
 **Stack:** New `logging` stack
 
@@ -43,6 +46,7 @@ This document lists missing infrastructure essentials identified during the repo
 
 ## [REC-04] Automated Backup Strategy
 
+**Issue:** [#3](https://github.com/heldertheking/infrastructure/issues/3)
 **Priority:** High  
 **Stack:** New `backup` stack
 
@@ -58,6 +62,7 @@ This document lists missing infrastructure essentials identified during the repo
 
 ## [REC-05] Automated Database Backups (Pelican MariaDB)
 
+**Issue:** [#4](https://github.com/heldertheking/infrastructure/issues/4)
 **Priority:** High  
 **Stack:** `pelican`
 
@@ -72,6 +77,7 @@ This document lists missing infrastructure essentials identified during the repo
 
 ## [REC-06] Centralised Alerting Channel
 
+**Issue:** [#5](https://github.com/heldertheking/infrastructure/issues/5)
 **Priority:** Medium  
 **Stack:** `monitoring`
 
@@ -86,6 +92,8 @@ This document lists missing infrastructure essentials identified during the repo
 ---
 
 ## [REC-07] Restrict Internal-Only Services — Remove Direct Host Port Exposure
+
+**Status:** Deferred — not being implemented right now. See [README.md → Deferred Recommendations](README.md#deferred-recommendations). The `10000–10050` port range is now reserved and documented in the main README as intended for Tailscale-only access, but the actual enforcement (Option A/B/C below) is not yet in place.
 
 **Priority:** Medium  
 **Stack:** `medialab`
@@ -123,17 +131,23 @@ ports:
 
 This prevents LAN/internet exposure while keeping the same URLs for local use (via SSH port-forwarding or when accessing from the host directly).
 
+#### Option D — Tailscale-only (chosen direction, not yet implemented)
+
+Bind these services to the host's Tailscale interface IP (or use `tailscale serve`/Tailscale ACLs) instead of `0.0.0.0`, so the `10000–10050` range documented in the main [README.md](README.md#port-allocation) is reachable only from devices on the tailnet — no Cloudflare Access policy or local DNS needed.
+
 **Actions:**
-- Choose Option A (preferred), B, or C above.
+- Choose Option A, B, C, or D (D — Tailscale-only — is the currently documented direction; see [README.md → Port Allocation](README.md#port-allocation)) above.
 - Remove or update the `ports:` blocks in `stacks/medialab/compose.yaml`.
 - Update `stacks/medialab/README.md` to reflect the new access method.
 - If using Option A: configure Cloudflare Access policies for the internal subdomains.
 - If using Option B: document the local DNS setup in the medialab README.
+- If using Option D: install Tailscale on the host, bind ports to the Tailscale IP, and document the tailnet-only access in the medialab README.
 
 ---
 
 ## [REC-08] Add Docker Healthchecks to Critical Services
 
+**Issue:** [#6](https://github.com/heldertheking/infrastructure/issues/6)
 **Priority:** Low  
 **Stack:** All
 
@@ -148,6 +162,7 @@ This prevents LAN/internet exposure while keeping the same URLs for local use (v
 
 ## [REC-09] Pin Container Image Versions — Watchtower Interaction
 
+**Issue:** [#7](https://github.com/heldertheking/infrastructure/issues/7)
 **Priority:** Low  
 **Stack:** All
 

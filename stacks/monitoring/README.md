@@ -14,20 +14,21 @@ Observability, uptime tracking, dashboard, and automatic container updates.
 
 ### Interactions
 
-```
-homepage         → public-net    → exposed via Traefik (homepage.<domain>)
-                 → monitoring-net → reads /mnt/storage (RO) for disk widget
+```mermaid
+flowchart LR
+    Homepage["homepage"] -->|"public-net → homepage.$DOMAIN"| Traefik["Traefik"]
+    Homepage -->|"monitoring-net (RO)"| Storage[("/mnt/storage<br/>disk widget")]
 
-uptime-kuma      → public-net    → exposed via Traefik (uptime.<domain>)
-                 → pings HC_PING_UUID endpoint on Healthchecks.io for dead-man's switch
+    UptimeKuma["uptime-kuma"] -->|"public-net → uptime.$DOMAIN"| Traefik
+    UptimeKuma -->|ping| Healthchecks["Healthchecks.io<br/>HC_PING_UUID"]
 
-beszel           → public-net    → exposed via Traefik (monitoring.<domain>)
-                 → receives metrics from beszel-agent (base stack)
+    Beszel["beszel"] -->|"public-net → monitoring.$DOMAIN"| Traefik
+    BeszelAgent["beszel-agent<br/>(base stack)"] -->|metrics| Beszel
 
-watchtower       → monitoring-net → reads Docker socket via docker-proxy-monitoring
-                 → sends notifications via NOTIFY_URL (Shoutrrr-compatible)
+    Watchtower["watchtower"] -->|monitoring-net| DockerProxy["docker-proxy-monitoring"]
+    Watchtower -->|NOTIFY_URL| Notify["Notification service<br/>(Shoutrrr-compatible)"]
 
-docker-proxy-monitoring → monitoring-net (internal only)
+    DockerProxy -.->|"monitoring-net (internal only)"| Socket[("Docker socket")]
 ```
 
 ## Prerequisites
@@ -66,6 +67,6 @@ See [`.env.monitoring.example`](.env.monitoring.example) for a ready-to-copy tem
 | `NOTIFY_URL` | Shoutrrr notification URL for Watchtower | *(secret — never commit)* |
 | `HC_PING_UUID` | Healthchecks.io check UUID (dead-man's switch) | *(secret — never commit)* |
 
-## Internal Port Range
+## Port Allocation
 
-`10 000 – 10 004` (reserved for medialab stack direct-port services)
+This stack has no direct host ports of its own — all services are exposed via Traefik on `public-net`. See [README.md → Port Allocation](../../README.md#port-allocation) for the homelab-wide `10000–10050` range reserved for internal/private services (used by the `medialab` stack).

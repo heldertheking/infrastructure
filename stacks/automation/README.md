@@ -12,12 +12,12 @@ Workflow automation and local AI inference.
 
 ### Interactions
 
-```
-n8n → public-net         → exposed via Traefik (automation.<domain>)
-    → automation-net      → internal communication
-    → docker-proxy-automation (tcp://docker-proxy-automation:2375) → Docker container/network info
-
-ollama → automation-net   → accessible by n8n for AI-powered workflows (http://ollama:11434)
+```mermaid
+flowchart LR
+    N8N["n8n"] -->|public-net| Traefik["Traefik<br/>automation.$DOMAIN"]
+    N8N -->|"automation-net<br/>tcp://docker-proxy-automation:2375"| DockerProxy["docker-proxy-automation"]
+    DockerProxy --> DockerInfo[("Docker container/<br/>network info")]
+    N8N -->|"automation-net<br/>http://ollama:11434"| Ollama["ollama"]
 ```
 
 n8n logs are written to `/home/node/logs/n8n.log` inside the container (mapped to `PATH_LOGS/n8n`). Ollama model data is persisted in `PATH_APPDATA/ollama`.
