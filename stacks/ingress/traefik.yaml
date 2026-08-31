@@ -5,6 +5,8 @@ global:
 api:
   insecure: true
 
+ping: {}
+
 log:
   level: INFO
 
