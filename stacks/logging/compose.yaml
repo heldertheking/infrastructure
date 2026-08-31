@@ -5,6 +5,7 @@ services:
     restart: unless-stopped
     user: "10001:10001"
     command: -config.file=/etc/loki/loki.yaml
+    mem_limit: 256m
     volumes:
       - ./loki.yaml:/etc/loki/loki.yaml:ro
       - ${PATH_APPDATA}/loki:/loki
@@ -21,14 +22,16 @@ services:
       retries: 5
       start_period: 30s
 
-  promtail:
-    image: grafana/promtail:3
-    container_name: promtail
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
     restart: unless-stopped
-    command: -config.file=/etc/promtail/promtail.yaml
+    command: run /etc/alloy/alloy.alloy --storage.path=/var/lib/alloy
+    mem_limit: 128m
     volumes:
-      - ./promtail.yaml:/etc/promtail/promtail.yaml:ro
+      - ./alloy.alloy:/etc/alloy/alloy.alloy:ro
       - ${PATH_LOGS}:/var/log/host:ro
+      - ${PATH_APPDATA}/alloy:/var/lib/alloy
     environment:
       TZ: ${TZ}
     depends_on:
@@ -37,7 +40,7 @@ services:
     networks:
       - logging-net
     ports:
-      - "10007:9080"
+      - "10007:12345"
 
   grafana:
     image: grafana/grafana:latest
@@ -89,3 +92,4 @@ networks:
   public-net:
     name: public-net
     external: true
+

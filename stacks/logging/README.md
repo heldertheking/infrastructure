@@ -1,29 +1,29 @@
 # Stack: logging
 
-Centralised log aggregation using Grafana Loki + Promtail + Grafana.
+Centralised log aggregation using Grafana Loki + Alloy + Grafana.
 
 ## Services
 
 | Service | Image | Purpose |
 |---------|-------|---------|
-| `loki` | `grafana/loki:3` | Log aggregation and storage backend |
-| `promtail` | `grafana/promtail:3` | Log shipper — scrapes Docker container logs and host log files |
+| `loki` | `grafana/loki:3` | Log aggregation and storage backend (256 MB limit) |
+| `alloy` | `grafana/alloy:latest` | Log shipper — scrapes Docker container logs and host log files (128 MB limit) |
 | `grafana` | `grafana/grafana:latest` | Log visualisation and dashboarding (public, admin-gated) |
-| `docker-proxy-logging` | `tecnativa/docker-socket-proxy` | Read-only Docker API proxy for Promtail container discovery |
+| `docker-proxy-logging` | `tecnativa/docker-socket-proxy` | Read-only Docker API proxy for Alloy container discovery |
 
 ### Interactions
 
 ```mermaid
 flowchart LR
-    Promtail["promtail"] -->|"push logs"| Loki["loki\n:3100 (internal)"]
-    Promtail -->|"container discovery"| DockerProxy["docker-proxy-logging\n(Docker socket, read-only)"]
-    Promtail -->|"host log files"| HostLogs["/var/log/host (read-only)"]
+    Alloy["alloy"] -->|"push logs"| Loki["loki\n:3100 (internal)"]
+    Alloy -->|"container discovery"| DockerProxy["docker-proxy-logging\n(Docker socket, read-only)"]
+    Alloy -->|"host log files"| HostLogs["/var/log/host (read-only)"]
 
     Grafana["grafana"] -->|"query"| Loki
     Grafana -->|"public-net → analytics.$DOMAIN"| Traefik["Traefik"]
 
     Loki -.->|"port 10006 (host)"| Tailnet["Tailscale / LAN"]
-    Promtail -.->|"port 10007 (host)"| Tailnet
+    Alloy -.->|"port 10007 (host)"| Tailnet
 ```
 
 ## Prerequisites
@@ -39,13 +39,20 @@ cp stacks/logging/.env.logging.example stacks/logging/.env
 make up STACK=logging
 ```
 
+## Config files
+
+| File | Purpose |
+|------|---------|
+| `loki.yaml` | Loki server configuration (schema, storage, retention) |
+| `alloy.alloy` | Alloy pipeline configuration (Docker discovery, host log scraping, Loki forwarding) |
+
 ## Configuration Variables
 
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `STACK_NAME` | Compose project name | `logging` |
-| `PATH_APPDATA` | App data directory (Loki storage + Grafana state) | `/opt/appdata/logging` |
-| `PATH_LOGS` | Host log directory mounted into Promtail read-only | `/var/log` |
+| `PATH_APPDATA` | App data directory (Loki storage + Grafana state + Alloy state) | `/opt/appdata/logging` |
+| `PATH_LOGS` | Host log directory mounted into Alloy read-only | `/var/log` |
 | `TZ` | Timezone | `Europe/Zurich` |
 | `DOMAIN` | Primary domain | `example.com` |
 | `GF_ADMIN_USER` | Grafana admin username | `admin` |
@@ -56,7 +63,7 @@ make up STACK=logging
 | Port | Service | Notes |
 |------|---------|-------|
 | `10006` | Loki HTTP API | Internal/Tailscale only |
-| `10007` | Promtail metrics | Internal/Tailscale only |
+| `10007` | Alloy UI / metrics | Internal/Tailscale only |
 | `80` (via Traefik) | Grafana | Public via `analytics.$DOMAIN` |
 
 ## Log Retention

@@ -1,0 +1,58 @@
+// Grafana Alloy configuration — Docker container log collection + Loki forwarding
+
+// ── Docker container log discovery via the socket proxy ──────────────────────
+discovery.docker "containers" {
+  host             = "tcp://docker-proxy-logging:2375"
+  refresh_interval = "15s"
+}
+
+// Relabel discovered containers to extract useful labels
+discovery.relabel "docker_containers" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "stack"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_log_stream"]
+    target_label  = "stream"
+  }
+}
+
+// Tail container logs
+loki.source.docker "containers" {
+  host          = "tcp://docker-proxy-logging:2375"
+  targets       = discovery.relabel.docker_containers.output
+  forward_to    = [loki.write.default.receiver]
+  relabel_rules = discovery.relabel.docker_containers.rules
+}
+
+// ── Host log file collection ──────────────────────────────────────────────────
+local.file_match "host_logs" {
+  path_targets = [{"__path__" = "/var/log/host/**/*.log", "job" = "host"}]
+}
+
+loki.source.file "host_logs" {
+  targets    = local.file_match.host_logs.targets
+  forward_to = [loki.write.default.receiver]
+}
+
+// ── Loki write endpoint ───────────────────────────────────────────────────────
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
