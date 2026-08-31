@@ -3,6 +3,17 @@ services:
     image: ghcr.io/pelican/panel:latest
     container_name: pelican-panel
     restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     security_opt:
       - no-new-privileges:true
     volumes:
@@ -27,6 +38,12 @@ services:
     image: mariadb:11
     container_name: pelican-db
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     security_opt:
       - no-new-privileges:true
     volumes:
@@ -44,6 +61,12 @@ services:
     image: redis:7-alpine
     container_name: pelican-redis
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     security_opt:
       - no-new-privileges:true
     volumes:
