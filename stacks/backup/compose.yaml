@@ -1,0 +1,28 @@
+services:
+  restic:
+    image: mazzolino/restic:1.7.2
+    container_name: restic-backup
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      BACKUP_CRON: ${BACKUP_CRON}
+      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD}
+      RESTIC_BACKUP_SOURCES: /backup/appdata
+      RESTIC_BACKUP_ARGS: ${RESTIC_BACKUP_ARGS}
+      RESTIC_FORGET_ARGS: ${RESTIC_FORGET_ARGS}
+      RESTIC_PRUNE_ARGS: ${RESTIC_PRUNE_ARGS}
+      RESTIC_CHECK_ARGS: ${RESTIC_CHECK_ARGS}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+    volumes:
+      - ${PATH_APPDATA_SOURCE}:/backup/appdata:ro
+      - ${PATH_APPDATA}/restic-cache:/root/.cache/restic
+    networks:
+      - backup-net
+
+networks:
+  backup-net:
+    name: backup-net
+    driver: bridge

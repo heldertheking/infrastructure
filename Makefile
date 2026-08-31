@@ -1,4 +1,4 @@
-STACKS := ingress base monitoring medialab automation pelican
+STACKS := ingress base monitoring backup medialab automation pelican
 STACK  ?= $(error STACK is not set — usage: make <target> STACK=<stack-name>)
 
 .PHONY: up down logs pull setup help
