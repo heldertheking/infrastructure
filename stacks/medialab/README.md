@@ -61,7 +61,7 @@ See [`.env.medialab.example`](.env.medialab.example) for a ready-to-copy templat
 | `PATH_APPDATA` | App config directory | `/opt/appdata/medialab` |
 | `PATH_STORAGE` | Downloads directory parent | `/mnt/storage-hdd/medialab` |
 | `PATH_MEDIA` | Media library root | `/mnt/storage-hdd/media` |
-| `PATH_LOGS` | Log directory | `/opt/appdata/medialab/logs` |
+| `PATH_LOGS` | Log directory | `/var/log/medialab` |
 | `TZ` / `TIMEZONE` | Timezone | `Europe/Zurich` |
 | `DOMAIN` | Primary domain | `example.com` |
 | `PUID` | Host user ID for LinuxServer images | `1000` |

@@ -60,7 +60,7 @@ See [`.env.monitoring.example`](.env.monitoring.example) for a ready-to-copy tem
 | `STACK_NAME` | Compose project name | `monitoring` |
 | `PATH_APPDATA` | App data directory | `/opt/appdata/monitoring` |
 | `PATH_STORAGE` | Storage path mounted read-only by homepage | `/mnt/storage-hdd` |
-| `PATH_LOGS` | Log directory | `/opt/appdata/monitoring/logs` |
+| `PATH_LOGS` | Log directory | `/var/log/monitoring` |
 | `TZ` | Timezone | `Europe/Zurich` |
 | `DOMAIN` | Primary domain | `example.com` |
 | `NOTIFY_URL` | Shoutrrr notification URL for Watchtower | *(secret — never commit)* |

@@ -50,6 +50,6 @@ See [`.env.automation.example`](.env.automation.example) for a ready-to-copy tem
 |----------|-------------|---------|
 | `STACK_NAME` | Compose project name | `automation` |
 | `PATH_APPDATA` | App data directory | `/opt/appdata/automation` |
-| `PATH_LOGS` | Log directory (written to storage, not appdata) | `/mnt/storage-hdd/automation/logs` |
+| `PATH_LOGS` | Log directory | `/var/log/automation` |
 | `TZ` | Timezone | `Europe/Zurich` |
 | `DOMAIN` | Primary domain | `example.com` |

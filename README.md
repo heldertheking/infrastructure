@@ -70,7 +70,7 @@ Traefik (reverse proxy, HTTP :80)
 Each stack uses:
 - `PATH_APPDATA` → `/opt/appdata/<stack-name>`
 - `PATH_STORAGE` → `/mnt/storage-hdd/<stack-name>`
-- `PATH_LOGS` → `/opt/appdata/<stack-name>/logs` (where applicable)
+- `PATH_LOGS` → `/var/log/<stack-name>` (where applicable)
 
 ---
 
