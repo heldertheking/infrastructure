@@ -31,8 +31,8 @@ services:
       TZ: ${TZ}
       UMASK: "0022"
     healthcheck:
-      test: ["CMD", "curl", "-f", "https://hc-ping.com/${HC_PING_UUID}"]
-      interval: 10m
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3001"]
+      interval: 30s
       retries: 3
       start_period: 10s
       timeout: 5s
