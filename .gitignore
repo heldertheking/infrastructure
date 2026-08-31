@@ -14,5 +14,6 @@ temp/
 
 .env.*
 !.env.example
+!.env.*.example
 
 legacy
