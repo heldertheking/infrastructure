@@ -35,6 +35,7 @@ Traefik (reverse proxy, HTTP :80)
 | [`ingress`](stacks/ingress/) | Traefik, Cloudflared, docker-socket-proxy | [→](stacks/ingress/README.md) |
 | [`base`](stacks/base/) | Portainer, Beszel agent | [→](stacks/base/README.md) |
 | [`monitoring`](stacks/monitoring/) | Homepage, Uptime Kuma, Watchtower, Beszel hub, docker-socket-proxy | [→](stacks/monitoring/README.md) |
+| [`backup`](stacks/backup/) | Restic scheduled backups (nightly) + optional media cold-sync guidance | [→](stacks/backup/README.md) |
 | [`medialab`](stacks/medialab/) | Jellyfin, Seerr, Prowlarr, Radarr, Sonarr, Bazarr, SABnzbd | [→](stacks/medialab/README.md) |
 | [`automation`](stacks/automation/) | n8n, Ollama, docker-socket-proxy | [→](stacks/automation/README.md) |
 | [`pelican`](stacks/pelican/) | Pelican panel + wings, MariaDB, Redis | [→](stacks/pelican/README.md) |
@@ -49,6 +50,7 @@ Traefik (reverse proxy, HTTP :80)
 | `ingress-net` | Internal bridge | Traefik ↔ docker-socket-proxy (isolated) |
 | `base-net` | Bridge | Portainer internal services |
 | `monitoring-net` | Bridge | Monitoring-stack internal services |
+| `backup-net` | Bridge | Backup-stack internal services |
 | `media-net` | Bridge | Media-stack internal services |
 | `automation-net` | Bridge | Automation-stack internal services |
 | `pelican-net` | Bridge | Pelican-stack internal services |
@@ -109,6 +111,7 @@ cp stacks/.env.example stacks/ingress/.env
 make up STACK=ingress
 make up STACK=base
 make up STACK=monitoring
+make up STACK=backup
 make up STACK=medialab
 make up STACK=automation
 make up STACK=pelican
