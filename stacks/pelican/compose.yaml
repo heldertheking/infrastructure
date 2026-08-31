@@ -1,6 +1,6 @@
 services:
   panel:
-    image: ghcr.io/pelican-dev/panel:latest
+    image: ghcr.io/pelican/panel:latest
     container_name: pelican-panel
     restart: unless-stopped
     security_opt:
@@ -54,7 +54,7 @@ services:
       - pelican-net
 
   wings:
-    image: ghcr.io/pelican-dev/wings:latest
+    image: ghcr.io/pelican/wings:latest
     container_name: pelican-wings
     restart: unless-stopped
     security_opt:
