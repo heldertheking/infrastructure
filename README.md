@@ -16,6 +16,7 @@ flowchart TD
         Uptime["Uptime Kuma<br/>uptime.$DOMAIN"]
         BeszelHub["Beszel Hub<br/>monitoring.$DOMAIN"]
         Portainer["Portainer<br/>containers.$DOMAIN"]
+        Grafana["Grafana<br/>analytics.$DOMAIN"]
         N8N["n8n<br/>automation.$DOMAIN"]
         Jellyfin["Jellyfin<br/>watch.$DOMAIN"]
         Seerr["Seerr<br/>media.$DOMAIN"]
@@ -27,6 +28,7 @@ flowchart TD
     Traefik --> Uptime
     Traefik --> BeszelHub
     Traefik --> Portainer
+    Traefik --> Grafana
     Traefik --> N8N
     Traefik --> Jellyfin
     Traefik --> Seerr
@@ -45,6 +47,7 @@ flowchart TD
 | [`ingress`](stacks/ingress/) | Traefik, Cloudflared, docker-socket-proxy | [→](stacks/ingress/README.md) |
 | [`base`](stacks/base/) | Portainer, Beszel agent | [→](stacks/base/README.md) |
 | [`monitoring`](stacks/monitoring/) | Homepage, Uptime Kuma, Watchtower, Beszel hub, docker-socket-proxy | [→](stacks/monitoring/README.md) |
+| [`logging`](stacks/logging/) | Grafana Loki, Promtail, Grafana, docker-socket-proxy | [→](stacks/logging/README.md) |
 | [`medialab`](stacks/medialab/) | Jellyfin, Seerr, Prowlarr, Radarr, Sonarr, Bazarr, SABnzbd | [→](stacks/medialab/README.md) |
 | [`automation`](stacks/automation/) | n8n, Ollama, docker-socket-proxy | [→](stacks/automation/README.md) |
 | [`pelican`](stacks/pelican/) | Pelican panel + wings, MariaDB, Redis | [→](stacks/pelican/README.md) |
@@ -62,6 +65,7 @@ flowchart TD
 | `media-net` | Bridge | Media-stack internal services |
 | `automation-net` | Bridge | Automation-stack internal services |
 | `pelican-net` | Bridge | Pelican-stack internal services |
+| `logging-net` | Bridge | Logging-stack internal services |
 
 > **Note:** `public-net` must be created before starting any stack:
 > ```bash
@@ -146,6 +150,7 @@ cp stacks/.env.example stacks/ingress/.env
 make up STACK=ingress
 make up STACK=base
 make up STACK=monitoring
+make up STACK=logging
 make up STACK=medialab
 make up STACK=automation
 make up STACK=pelican
