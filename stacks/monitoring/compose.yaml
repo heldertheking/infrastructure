@@ -62,7 +62,7 @@ services:
       WATCHTOWER_CLEANUP: "true"
       WATCHTOWER_ROLL_BACK_ON_FAILURE: "true"
       WATCHTOWER_NOTIFICATIONS: shoutrrr
-      WATCHTOWER_NOTIFICATION_URL: "generic://${NOTIFY_URL}"
+      WATCHTOWER_NOTIFICATION_URL: "${NOTIFY_URL}"
       WATCHTOWER_NOTIFICATIONS_LEVEL: info
     networks:
       - monitoring-net
