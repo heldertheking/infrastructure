@@ -7,8 +7,8 @@ services:
     command: -config.file=/etc/loki/loki.yaml
     mem_limit: 256m
     volumes:
-      - ./loki.yaml:/etc/loki/loki.yaml:ro
-      - ${PATH_APPDATA}/loki:/loki
+      - ${PATH_APPDATA}/loki/config/loki.yaml:/etc/loki/loki.yaml:ro
+      - ${PATH_APPDATA}/loki/data:/loki
     environment:
       TZ: ${TZ}
     networks:
@@ -29,9 +29,9 @@ services:
     command: run /etc/alloy/alloy.alloy --storage.path=/var/lib/alloy
     mem_limit: 128m
     volumes:
-      - ./alloy.alloy:/etc/alloy/alloy.alloy:ro
+      - ${PATH_APPDATA}/alloy/config/alloy.alloy:/etc/alloy/alloy.alloy:ro
       - ${PATH_LOGS}:/var/log/host:ro
-      - ${PATH_APPDATA}/alloy:/var/lib/alloy
+      - ${PATH_APPDATA}/alloy/data:/var/lib/alloy
     environment:
       TZ: ${TZ}
     depends_on:
@@ -92,4 +92,3 @@ networks:
   public-net:
     name: public-net
     external: true
-
