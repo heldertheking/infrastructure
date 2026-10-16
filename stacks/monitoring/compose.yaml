@@ -85,6 +85,54 @@ services:
       - "traefik.http.routers.beszel.entrypoints=web"
       - "traefik.http.services.beszel.loadbalancer.server.port=8090"
 
+  homelable-backend:
+    image: ghcr.io/pouzor/homelable-backend:latest
+    container_name: homelable-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      TZ: ${TZ}
+      SQLITE_PATH: /app/data/homelab.db
+      CORS_ORIGINS: '["http://localhost:3000", "https://homelable.${DOMAIN}"]'
+    volumes:
+      - ${PATH_APPDATA}/homelable/data:/app/data
+    networks:
+      - monitoring-net
+    cap_add:
+      - NET_RAW
+
+  homelable-frontend:
+    image: ghcr.io/pouzor/homelable-frontend:latest
+    container_name: homelable-frontend
+    restart: unless-stopped
+    depends_on:
+      - homelable-backend
+    networks:
+      - monitoring-net
+      - public-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homelable.rule=Host(`homelable.${DOMAIN}`)"
+      - "traefik.http.routers.homelable.entrypoints=web"
+      - "traefik.http.services.homelable.loadbalancer.server.port=80"
+
+  homelable-mcp:
+    image: ghcr.io/pouzor/homelable-mcp:latest
+    container_name: homelable-mcp
+    restart: unless-stopped
+    ports:
+      - "10006:8001"
+    env_file:
+      - .env
+    environment:
+      TZ: ${TZ}
+      BACKEND_URL: "http://homelable-backend:8000"
+    depends_on:
+      - homelable-backend
+    networks:
+      - monitoring-net
+
   docker-proxy-monitoring:
     image: tecnativa/docker-socket-proxy
     container_name: docker-proxy-monitoring
