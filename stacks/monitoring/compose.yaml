@@ -122,8 +122,6 @@ services:
     restart: unless-stopped
     ports:
       - "10006:8001"
-    env_file:
-      - .env
     environment:
       TZ: ${TZ}
       BACKEND_URL: "http://homelable-backend:8000"
