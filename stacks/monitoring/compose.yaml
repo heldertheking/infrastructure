@@ -94,6 +94,8 @@ services:
       SQLITE_PATH: /app/data/homelab.db
       CORS_ORIGINS: '["http://localhost:3000", "https://homelable.${DOMAIN}"]'
       SECRET_KEY: ${SECRET_KEY}
+      AUTH_MODE: "local"
+      AUTH_USERNAME: ${HOMELABLE_USER}
       ADMIN_PASSWORD: ${HOMELABLE_PASS}
     volumes:
       - ${PATH_APPDATA}/homelable/data:/app/data
