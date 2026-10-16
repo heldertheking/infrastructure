@@ -94,6 +94,8 @@ services:
       SQLITE_PATH: /app/data/homelab.db
       CORS_ORIGINS: '["http://localhost:3000", "https://homelable.${DOMAIN}"]'
       SECRET_KEY: ${SECRET_KEY}
+      AUTH_USERNAME: ${HOMELABLE_USER}
+      AUTH_PASSWORD: ${HOMELABLE_PASS}
     volumes:
       - ${PATH_APPDATA}/homelable/data:/app/data
     networks:
@@ -124,7 +126,7 @@ services:
     container_name: homelable-mcp
     restart: unless-stopped
     ports:
-      - "10006:8001"
+      - "10007:8001"
     environment:
       TZ: ${TZ}
       BACKEND_URL: "http://homelable-backend:8000"
