@@ -89,12 +89,11 @@ services:
     image: ghcr.io/pouzor/homelable-backend:latest
     container_name: homelable-backend
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
       TZ: ${TZ}
       SQLITE_PATH: /app/data/homelab.db
       CORS_ORIGINS: '["http://localhost:3000", "https://homelable.${DOMAIN}"]'
+      SECRET_KEY: ${SECRET_KEY}
     volumes:
       - ${PATH_APPDATA}/homelable/data:/app/data
     networks:
@@ -128,6 +127,7 @@ services:
     environment:
       TZ: ${TZ}
       BACKEND_URL: "http://homelable-backend:8000"
+      MCP_API_KEY: ${MCP_API_KEY}
     depends_on:
       - homelable-backend
     networks:
