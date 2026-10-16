@@ -105,6 +105,9 @@ services:
     image: ghcr.io/pouzor/homelable-frontend:latest
     container_name: homelable-frontend
     restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      BACKEND_UPSTREAM: "homelable-backend:8000"
     depends_on:
       - homelable-backend
     networks:
