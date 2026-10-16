@@ -96,7 +96,7 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       AUTH_MODE: "local"
       AUTH_USERNAME: ${HOMELABLE_USER}
-      ADMIN_PASSWORD: ${HOMELABLE_PASS}
+      ADMIN_PASSWORD_HASH: ${HOMELABLE_PASS}
     volumes:
       - ${PATH_APPDATA}/homelable/data:/app/data
     networks:
